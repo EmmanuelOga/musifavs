@@ -1,0 +1,9 @@
+{
+  "firebase": "musifavs",
+  "public": "release",
+  "ignore": [
+    "firebase.json",
+    "**/.*",
+    "**/node_modules/**"
+  ]
+}

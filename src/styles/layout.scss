@@ -1,0 +1,26 @@
+body {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+app {
+  flex: 1;
+}
+
+.header, .footer {
+  display: block;
+  padding: 0.5em;
+
+  color: #444;
+  background-color: #ddd;
+}
+
+.header .logo {
+  font-weight: bold;
+  color: #777;
+}
+
+.footer {
+  border-top: 1px solid #050;
+}

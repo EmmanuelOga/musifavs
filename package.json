@@ -1,0 +1,42 @@
+{
+  "name": "musifavs",
+  "version": "1.0.0",
+  "description": "Microblog for your favorite music.",
+
+  "main": "main.js",
+
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/emmanueloga/musifavs/"
+  },
+
+  "author": "Emmanuel Oga",
+  "license": "MIT",
+  "dependencies": {
+    "riot": "^2.0.10"
+  },
+
+  "devDependencies": {
+    "browserify": "^8.1.3",
+    "rewatch": "^0.4.0",
+    "live-server" : "^0.6.4",
+    "node-sass" : "^2.0.1",
+    "riotify": "^0.0.9"
+  },
+
+  "scripts": {
+    "debug:build:css" : "node-sass src/styles.scss --output=debug --source-map debug/styles.css.map --source-map-embed",
+    "debug:build:app" : "browserify src/main.js -t [riotify --ext html] -d -o debug/main.js",
+    "debug:build:idx" : "cp src/index.html debug/index.html",
+    "debug:build"     : "npm run debug:build:css & npm run debug:build:app & npm run debug:build:idx",
+
+    "debug:watch:css" : "rewatch src/**/*.?css -c 'npm run debug:build:css'",
+    "debug:watch:app" : "rewatch src/**/*{js,html} -c 'npm run debug:build:app'",
+    "debug:watch:idx" : "rewatch src/index.html -c 'npm run debug:build:idx'",
+    "debug:watch"     : "npm run debug:watch:css & npm run debug:watch:app & npm run debug:watch:idx",
+
+    "debug:serve" : "live-server debug",
+
+    "debug" : "npm run debug:watch & npm run debug:serve"
+  }
+}
