@@ -1,0 +1,27 @@
+app-message {
+  display: block;
+  position: absolute;
+  top: 5em; left: 5em; right: 5em;
+  z-index: 2;
+}
+
+.app-message {
+  background-color: #efefaa;
+  opacity: 0.9;
+
+  border-radius: 5px;
+  border: 1px solid #444;
+
+  padding: 1em;
+}
+
+.app-message-dismiss {
+  padding: 0.5em;
+  float: right;
+}
+
+.app-message-dismiss a {
+  color: #444;
+  font-weight: bold;
+  font-size: 0.8em;
+}

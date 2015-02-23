@@ -1,4 +1,9 @@
 @import "./vendor/normalize.scss";
 @import "./styles/base.scss";
 @import "./styles/layout.scss";
-@import "./styles/app.scss";
+@import "./styles/navigation.scss";
+@import "./styles/state.scss";
+
+@import "./modules/app-message.scss";
+@import "./modules/app-front.scss";
+@import "./modules/app-user.scss";

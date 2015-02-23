@@ -12,8 +12,10 @@
 
   "author": "Emmanuel Oga",
   "license": "MIT",
+
   "dependencies": {
-    "riot": "^2.0.10"
+    "riot": "^2.0.10",
+    "page": "^1.6.1"
   },
 
   "devDependencies": {
@@ -27,12 +29,12 @@
   "scripts": {
     "debug:build:css" : "node-sass src/styles.scss --output=debug --source-map debug/styles.css.map --source-map-embed",
     "debug:build:app" : "browserify src/main.js -t [riotify --ext html] -d -o debug/main.js",
-    "debug:build:idx" : "cp src/index.html debug/index.html",
+    "debug:build:idx" : "cp src/index.html debug/index.html && cp -R -p src/assets debug/assets",
     "debug:build"     : "npm run debug:build:css & npm run debug:build:app & npm run debug:build:idx",
 
     "debug:watch:css" : "rewatch src/**/*.?css -c 'npm run debug:build:css'",
     "debug:watch:app" : "rewatch src/**/*{js,html} -c 'npm run debug:build:app'",
-    "debug:watch:idx" : "rewatch src/index.html -c 'npm run debug:build:idx'",
+    "debug:watch:idx" : "rewatch src/{index.html,assets/*} -c 'npm run debug:build:idx'",
     "debug:watch"     : "npm run debug:watch:css & npm run debug:watch:app & npm run debug:watch:idx",
 
     "debug:serve" : "live-server debug",
