@@ -14,7 +14,7 @@
   "license": "MIT",
 
   "dependencies": {
-    "riot": "^2.0.10",
+    "riot": "^2.0.11",
     "page": "^1.6.1"
   },
 
@@ -23,7 +23,8 @@
     "rewatch": "^0.4.0",
     "live-server" : "^0.6.4",
     "node-sass" : "^2.0.1",
-    "riotify": "^0.0.9"
+    "riotify": "^0.0.9",
+    "http-rewrite-middleware" : "^0.1.6"
   },
 
   "scripts": {

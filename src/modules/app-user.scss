@@ -4,24 +4,21 @@ app-user {
   flex-direction: column;
 }
 
-.profile, .main {
-  margin: 0;
-  padding: 0;
-}
-
-.main {
-  flex: 1;
-  order: 0;
-  max-width: 768px;
-  background-color: #e9e9e9;
-}
-
-.main-copy {
-  padding: 0 1em;
-}
+.post-placeholder {
+  margin: 1em;
+  padding: 1em;
+  text-align: center;
+  background-color: #efefef;
+};
 
 .profile {
   order: 1;
-  min-width: 256px;
+  min-width: 384px;
   background-color: #e7e7e7;
+}
+
+.profile-info {
+  margin: 1em;
+  padding: 0.5em;
+  border: 1px solid green;
 }

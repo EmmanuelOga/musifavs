@@ -1,13 +1,35 @@
 <app-user>
-  <div class="flex-content-wrapper">
-    <aside class="profile">
-      Profile
+  <div class='flex-content-wrapper'>
+    <aside class='profile'>
+      <div class='profile-info'>
+        Profile
+      </div>
     </aside>
 
-    <main class="main" role="main">
-      <article>
-        Something
-      </article>
+    <main class='main' role='main'>
+      <div class={'app-hidden': !postsUnavailable, 'post-placeholder' : true }>
+        <h1>Hey!&nbsp;<i class='fa fa-child'></i>&nbsp;<i class='fa fa-play'></i></h1>
+        <p>
+          This user has not posted anything yet. Please check back later!
+        </p>
+      </div>
+
+      <app-post each={posts} post={this}></app-post>
     </main>
   </div>
+
+  <script>
+    var Dispatcher = require('../vendor/RiotControl.js')
+
+    this.postsUnavailable = false
+    this.posts = []
+
+    Dispatcher.on('user', function(user) {
+      Dispatcher.trigger('posts:user:load', user)
+    })
+
+    Dispatcher.on('posts:user:available', function(posts){
+      this.update({ posts: posts })
+    }.bind(this))
+  </script>
 </app-user>

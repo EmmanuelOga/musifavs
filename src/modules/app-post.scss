@@ -1,0 +1,70 @@
+app-post {
+  display: block;
+  padding: 0 1em 2em;
+}
+
+.post-actions {
+  width: 100%;
+  padding: 1em 0;
+
+  a {
+    font-weight: bold;
+    text-decoration: none;
+    color: black;
+    padding: 0.5em;
+    border: 1px solid #ddd;
+
+    &:hover {
+      border: 1px solid #aaa;
+      box-shadow: 0px 0px 5px black;
+    }
+
+    &:active {
+      background-color: #ccc;
+    }
+  }
+}
+
+.post-favorited i {
+  color: red;
+}
+
+app-post-show {
+  display: block;
+  padding: 1em;
+  box-shadow: 2px 5px 5px #ddd;
+}
+
+app-post-form {
+  display: block;
+  padding: 1em;
+  box-shadow: 2px 5px 5px #ddd;
+
+  input:invalid, textarea:invalid, select:invalid  {
+    background-color: #fdd;
+  }
+
+  label {
+    color: #555;
+    font-size: 0.8em;
+    margin-top: 1em;
+    display: block;
+  }
+  input, textarea {
+    width: 32em;
+  }
+  select {
+    width: 16em;
+  }
+  textarea {
+    margin-top: 1em;
+    min-height: 8em;
+  }
+  .post-form-data {
+    margin-top: 1em;
+  }
+
+  .post-edit-message {
+    float: right;
+  }
+}

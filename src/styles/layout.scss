@@ -20,6 +20,13 @@
  * Main content
  */
 
+.main {
+  flex: 1;
+  order: 0;
+  max-width: 768px;
+  background-color: #e9e9e9;
+}
+
 .flex-content-wrapper {
   flex: 1;
 
@@ -49,6 +56,8 @@
 }
 
 .footer {
+  font-size: small;
   text-align: right;
   border-top: 1px solid #050;
+  a { color: #444; }
 }

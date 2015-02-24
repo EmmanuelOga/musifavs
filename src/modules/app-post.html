@@ -1,0 +1,89 @@
+<app-post>
+  <app-post-form class={'app-hidden': !editing} post={opts.post}></app-post-form>
+  <app-post-show class={'app-hidden': editing} post={opts.post}></app-post-show>
+
+  <script>
+    var Dispatcher = require('../vendor/RiotControl')
+    this.editing = false
+  </script>
+</app-post>
+
+<app-post-show>
+  <h2>{post.title}</h2>
+
+  <div class='post-show-embed'>
+    <iframe if={post.embed.type == 'youtube'} type='text/html' width='640' height='260'
+      src='http://www.youtube.com/embed/{post.embed.videoId}'
+      frameborder='0'></iframe>
+  </div>
+
+  <p class='post-show-description'>
+    {post.desc}
+  </p>
+
+  <div class='post-actions'>
+    <a title='Favorite' href='#' onclick={toggleFav} class='{post-favorited: post.favorited}'><i class='fa fa-heart'></i>&nbsp;Favorite</a>
+    <a title='Edit'     href='#' onclick={edit}><i class='fa fa-edit'></i>&nbsp;Edit</a>
+    <a title='Remove'   href='#'><i class='fa fa-trash'></i>&nbsp;Remove</a>
+  </div>
+
+  <script>
+    this.favorited = false
+    this.post = opts.post
+
+    edit(ev) {
+      this.parent.editing = true
+      this.parent.update()
+    }
+
+    toggleFav(ev) {
+      this.post.favorited = !this.post.favorited
+    }
+  </script>
+</app-post-show>
+
+<app-post-form>
+  <form name='postForm'>
+    <div class='post-form-embed'>
+      <label>Embed Type</label>
+      <select required name='postFormEmbedType'>
+        <option value='youtube' selected>YouTube</option>
+      </select>
+
+      <label>YouTube Url</label>
+      <input name='postFormEmbedUrl' type='url' required
+             pattern='.+youtube.com/watch.+v=.+'
+             placeholder='https://www.youtube.com/watch?v=P9J5tYShNY8' />
+    </div>
+
+    <div class='post-form-data'>
+      <input required title='Post Title (at least 4 characters)'
+             type='text' name='inPostTitle' placeholder='Title' />
+      <textarea name='inPostDescription' placeholder='Description' /></textarea>
+    </div>
+
+    <div class='post-actions'>
+      <a title='Undo' onclick={undo} href='#'><i class='fa fa-times-circle'></i>&nbsp;Cancel</a>
+      <a title='Save and Publish' onclick={publish} href='#'><i class='fa fa-save'></i>&nbsp;Save</a>
+      <span class='post-edit-message' name='msg'>{editMessage}</span>
+    </div>
+  </form>
+
+  <script>
+    showMessage(msg) {
+      this.msg.innerText = msg
+    }
+
+    undo(ev) {
+      this.parent.editing = false
+      this.parent.update()
+    }
+
+    publish(ev) {
+      if (this.postForm.checkValidity()) {
+      } else {
+        this.showMessage('Sorry, the form can\'t be saved because there are some invalid fields.')
+      }
+    }
+  </script>
+</app-post-form>

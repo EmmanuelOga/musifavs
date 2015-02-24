@@ -1,21 +1,24 @@
 <app-message>
-  <div class="app-message">
+  <div class='app-message'>
     {message}
-    <div class="app-message-dismiss">
-      <a href="javascript:void(0)" onclick={dismiss}>Dismiss</a>
+    <div class='app-message-dismiss'>
+      <a href='javascript:void(0)' onclick={dismiss}>Dismiss</a>
     </div>
   </div>
 
   <script>
+    var Dispatcher = require('../vendor/RiotControl.js')
+
     dismiss(ev) {
-      this.message = '';
-      this.root.classList.add('app-hidden');
+      this.message = ''
+      this.root.classList.add('app-hidden')
     }
 
-    this.on('message', function(text) {
-      this.message = text;
-      this.root.classList.remove('app-hidden');
-      this.update();
-    }.bind(this));
+    Dispatcher.on('message', function(text) {
+      console.log(arguments)
+      this.message = text
+      this.root.classList.remove('app-hidden')
+      this.update()
+    }.bind(this))
   </script>
 </app-message>
