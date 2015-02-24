@@ -7,7 +7,7 @@
   </div>
 
   <script>
-    var Dispatcher = require('../vendor/RiotControl.js')
+    var Dispatcher = require('../app/dispatcher')
 
     dismiss(ev) {
       this.message = ''
@@ -15,7 +15,6 @@
     }
 
     Dispatcher.on('message', function(text) {
-      console.log(arguments)
       this.message = text
       this.root.classList.remove('app-hidden')
       this.update()

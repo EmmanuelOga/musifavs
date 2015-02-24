@@ -1,6 +1,6 @@
 app-post {
   display: block;
-  padding: 0 1em 2em;
+  padding: 1em 1em 2em;
 }
 
 .post-actions {
@@ -38,9 +38,10 @@ app-post-show {
 app-post-form {
   display: block;
   padding: 1em;
-  box-shadow: 2px 5px 5px #ddd;
+  box-shadow: 2px 5px 5px #ddc;
+  background-color: #dfdfdf;
 
-  input:invalid, textarea:invalid, select:invalid  {
+  .invalid {
     background-color: #fdd;
   }
 

@@ -2,11 +2,60 @@
  * Simple wrapper around post objects.
  */
 function Post(opts) {
-  this['date'] = opts && opts['date'] || (new Date())
-  this['title'] = opts && opts['title'] || 'Post Title'
-  this['embed'] = opts && opts['embeddata'] || {type: 'youtube', videoId: 'P9J5tYShNY8'}
-  this['desc'] = opts && opts['description'] || 'Post Description'
-  this['favorited'] = opts && opts['favorited'] || true
+  var defaults = require('lodash/object/defaults')
+
+  defaults(this, opts, {
+    date: new Date(),
+    title: 'Post Title',
+    embed: {
+      type: 'youtube',
+      url: 'https://www.youtube.com/watch?v=P9J5tYShNY8',
+      videoId: 'P9J5tYShNY8'
+    },
+    desc: 'Post Description',
+    favorited: false
+  })
+}
+
+Post.prototype.update = function(opts) {
+  var merge = require('lodash/object/merge')
+
+  merge(this, opts)
+
+  // try to update the embed type, if valid.
+  if (opts.embed && opts.embed.url) {
+    var youtubeMatch = (/youtube.com.+\?v=([a-zA-z0-9]+)/i).exec(opts.embed.url)
+
+    if (youtubeMatch.length) {
+      this.embed.type = 'youtube'
+      this.embed.videoId = youtubeMatch[1]
+    } else {
+      this.embed.type = undefined
+    }
+  }
+
+  return this
+}
+
+Post.prototype.validationResult = function() {
+  var r = { errors: [], isValid: true }
+
+  if (!this.date instanceof Date) {
+    r.errors.date = 'date is invalid'
+    r.isValid = false
+  }
+
+  if (!this.title || this.title.length == 0) {
+    r.errors.title = 'title can\'t be blank'
+    r.isValid = false
+  }
+
+  if (!this.embed || !this.embed.type) {
+    r.errors.url = 'the embed url is invalid'
+    r.isValid = false
+  }
+
+  return r;
 }
 
 module.exports = Post

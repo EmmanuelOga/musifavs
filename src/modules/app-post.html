@@ -1,15 +1,30 @@
 <app-post>
-  <app-post-form class={'app-hidden': !editing} post={opts.post}></app-post-form>
-  <app-post-show class={'app-hidden': editing} post={opts.post}></app-post-show>
+  <app-post-form class={'app-hidden': !editing}></app-post-form>
+  <app-post-show class={'app-hidden': editing}></app-post-show>
 
   <script>
-    var Dispatcher = require('../vendor/RiotControl')
-    this.editing = false
+    var Dispatcher = require('../app/dispatcher')
+    var Post = require('../app/post')
+
+    show(data) {
+      this.update({
+        editing: false,
+        post: (data ? new Post(data) : this.post)
+      })
+    }
+
+    edit() {
+      this.editing = true
+      this.update()
+    }
+
+    editing = false
+    post = new Post(opts.post)
   </script>
 </app-post>
 
 <app-post-show>
-  <h2>{post.title}</h2>
+  <h2><i class='fa fa-play'></i>&nbsp;{post.title}</h2>
 
   <div class='post-show-embed'>
     <iframe if={post.embed.type == 'youtube'} type='text/html' width='640' height='260'
@@ -28,12 +43,12 @@
   </div>
 
   <script>
-    this.favorited = false
-    this.post = opts.post
+    this.parent.on('update', function(){
+      this.update({post: this.parent.post})
+    }.bind(this))
 
     edit(ev) {
-      this.parent.editing = true
-      this.parent.update()
+      this.parent.edit()
     }
 
     toggleFav(ev) {
@@ -44,22 +59,23 @@
 
 <app-post-form>
   <form name='postForm'>
-    <div class='post-form-embed'>
-      <label>Embed Type</label>
-      <select required name='postFormEmbedType'>
-        <option value='youtube' selected>YouTube</option>
-      </select>
+    <h2>Editing Post</h2>
 
-      <label>YouTube Url</label>
-      <input name='postFormEmbedUrl' type='url' required
-             pattern='.+youtube.com/watch.+v=.+'
+    <p>
+      Provide the resource url to share, a title and a description.
+    </p>
+
+    <div class='post-form-embed'>
+      <label>Embed Url (e.g. YouTube Url)</label>
+      <input name='embedUrl' type='url' value={post.embed.url} class={invalid: urlInvalid}
              placeholder='https://www.youtube.com/watch?v=P9J5tYShNY8' />
     </div>
 
     <div class='post-form-data'>
-      <input required title='Post Title (at least 4 characters)'
-             type='text' name='inPostTitle' placeholder='Title' />
-      <textarea name='inPostDescription' placeholder='Description' /></textarea>
+      <input name='postTitle' type='text' value={post.title} class={invalid: titleInvalid}
+             title='Post Title' placeholder='Title' />
+      <textarea name='postDescription' value={post.desc}
+             title='Post Description' placeholder='Description' /></textarea>
     </div>
 
     <div class='post-actions'>
@@ -70,19 +86,37 @@
   </form>
 
   <script>
-    showMessage(msg) {
+    this.parent.on('update', function(){
+      this.update({post: this.parent.post})
+    }.bind(this))
+
+    message(msg) {
       this.msg.innerText = msg
     }
 
     undo(ev) {
-      this.parent.editing = false
-      this.parent.update()
+      this.parent.show()
     }
 
     publish(ev) {
-      if (this.postForm.checkValidity()) {
+      var values = require('lodash/object/values')
+      var Post = require('../app/post')
+
+      var newPost = new Post(this.post).update({
+        title: this.postTitle.value,
+        desc: this.postDescription.value,
+        embed: {url: this.embedUrl.value}
+      })
+
+      var result = newPost.validationResult()
+
+      if (result.isValid) {
+        this.parent.show(newPost)
       } else {
-        this.showMessage('Sorry, the form can\'t be saved because there are some invalid fields.')
+        var msg = values(result.errors).join(', ')
+        this.urlInvalid = !!result.errors.url
+        this.titleInvalid = !!result.errors.title
+        this.message('Sorry, the post can\'t be saved: ' + msg + '.')
       }
     }
   </script>

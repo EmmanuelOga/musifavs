@@ -19,7 +19,7 @@
   </div>
 
   <script>
-    var Dispatcher = require('../vendor/RiotControl.js')
+    var Dispatcher = require('../app/dispatcher')
 
     this.postsUnavailable = false
     this.posts = []
@@ -29,6 +29,7 @@
     })
 
     Dispatcher.on('posts:user:available', function(posts){
+      console.log('new posts available')
       this.update({ posts: posts })
     }.bind(this))
   </script>

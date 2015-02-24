@@ -1,9 +1,11 @@
-var riot = require("riot");
+var riot = require('riot');
 
 /*
- * Adapted from https://github.com/jimsparkman/RiotControl
+ * Inspired by https://github.com/jimsparkman/RiotControl
+ * Events triggered by the dispatcher or any registered store are fanned out to
+ * all listeners
  */
-function RiotControl() {
+function Dispatcher() {
   riot.observable(this);
 
   var triggers = []
@@ -11,7 +13,7 @@ function RiotControl() {
   function callTriggers() {
     var args = [].slice.call(arguments);
     triggers.forEach(function(t){
-      // console.log("triggered " + args + " on " + t.name);
+      // console.log('triggered ' + args + ' on ' + t.name);
       t.trigger.apply(null, args)
     });
   };
@@ -24,4 +26,4 @@ function RiotControl() {
   this.addStore(this);
 };
 
-module.exports = new RiotControl();
+module.exports = new Dispatcher();

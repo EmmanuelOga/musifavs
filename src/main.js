@@ -7,10 +7,10 @@ require('./modules/app-post.html')
  * Setup Data Stores
  */
 
-var Posts = require('./app/posts.js')
-var Users = require('./app/users.js')
+var Posts = require('./app/posts')
+var Users = require('./app/users')
 
-var Dispatcher = require('./vendor/RiotControl.js')
+var Dispatcher = require('./app/dispatcher')
 
 Dispatcher.addStore(new Posts())
 Dispatcher.addStore(new Users())
