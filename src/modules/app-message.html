@@ -9,14 +9,23 @@
   <script>
     var Dispatcher = require('../app/dispatcher')
 
+    show(text) {
+      this.message = text
+      this.root.classList.remove('app-hidden')
+    }
+
     dismiss(ev) {
       this.message = ''
       this.root.classList.add('app-hidden')
     }
 
     Dispatcher.on('message', function(text) {
-      this.message = text
-      this.root.classList.remove('app-hidden')
+      this.show(text)
+      this.update()
+    }.bind(this))
+
+    Dispatcher.on('message:hide', function(text) {
+      this.dismiss()
       this.update()
     }.bind(this))
   </script>

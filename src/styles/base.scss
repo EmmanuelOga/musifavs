@@ -15,3 +15,19 @@ body {
   max-width: 100%;
 }
 
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #bbb;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background: #050;
+}
+
+::-webkit-scrollbar-thumb:window-inactive {
+  background: #777;
+}

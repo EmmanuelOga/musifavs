@@ -1,5 +1,4 @@
 <app-post>
-  {opts.debug}
   <app-post-form if={editing}></app-post-form>
   <app-post-show if={!editing}></app-post-show>
 
@@ -21,6 +20,7 @@
 </app-post>
 
 <app-post-show>
+  <p>{post.niceDate()}</p>
   <h2><i class='fa fa-play'></i>&nbsp;{post.title}</h2>
 
   <div class='post-show-embed'>
@@ -36,10 +36,12 @@
   <div class='post-actions'>
     <a title='Favorite' href='#' onclick={toggleFav} class='{post-favorited: post.favorited}'><i class='fa fa-heart'></i>&nbsp;Favorite</a>
     <a title='Edit'     href='#' onclick={edit}><i class='fa fa-edit'></i>&nbsp;Edit</a>
-    <a title='Remove'   href='#'><i class='fa fa-trash'></i>&nbsp;Remove</a>
+    <a title='Remove'   href='#' onclick={remove}><i class='fa fa-trash'></i>&nbsp;Remove</a>
   </div>
 
   <script>
+    var Dispatcher = require('../app/dispatcher')
+
     this.post = this.parent.post
 
     this.parent.on('update mount', function(){
@@ -53,12 +55,16 @@
     toggleFav(ev) {
       this.post.favorited = !this.post.favorited
     }
+
+    remove(ev) {
+      Dispatcher.trigger('posts:destroy', this.post)
+    }
   </script>
 </app-post-show>
 
 <app-post-form>
   <form name='postForm'>
-    <h2>Editing Post</h2>
+    <h2>{this.post.isPersisted ? 'Editing Post' : 'New Post'}</h2>
 
     <p>
       Provide the resource url to share, a title and a description.
@@ -95,20 +101,24 @@
       this.update({post: this.parent.post})
     }.bind(this))
 
-    this.on('update mount', function(){
+    this.validating = false
+
+    this.on('update', function(){
       // Hack: riot should reset these values...
-      if (!this.post.isPersisted) {
+      if (!this.post.isPersisted && !this.validating) {
         this.postTitle.value = ''
         this.postDescription.value = ''
         this.embedUrl.value = ''
       }
-    })
+    }.bind(this))
 
     message(msg) {
       this.msg.innerText = msg
     }
 
     undo(ev) {
+      var page = require('page')
+
       if (this.post.isPersisted) {
         // Hack: riot should reset these values...
         this.postTitle.value = this.post.title
@@ -116,12 +126,14 @@
         this.embedUrl.value = this.post.embed.url
         this.parent.show()
       } else {
+        this.validating = false
         Dispatcher.trigger('user:cancelcreatepost')
+        page.redirect('/posts')
       }
     }
 
     publish(ev) {
-      var newPost = new Post(this.post).update({
+      var newPost = new Post(this.post).setAttributes({
         title: this.postTitle.value,
         desc: this.postDescription.value,
         embed: {url: this.embedUrl.value}
@@ -130,15 +142,16 @@
       var result = newPost.validationResult()
 
       if (result.isValid) {
-        newPost.save() // We could wait to trigger until is saved but we'll assume it will succeed.
-
         if (this.post.isPersisted) {
+          newPost.save()
           this.parent.show(newPost)
         } else {
-          Dispatcher.trigger('user:createpost', newPost)
+          newPost.create()
+          Dispatcher.trigger('user:cancelcreatepost', newPost)
         }
       } else {
         var msg = values(result.errors).join(', ')
+        this.validating = true
         this.urlInvalid = !!result.errors.url
         this.titleInvalid = !!result.errors.title
         this.message('Sorry, the post can\'t be saved: ' + msg + '.')

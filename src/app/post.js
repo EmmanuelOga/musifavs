@@ -1,55 +1,93 @@
+var Users = require('./users')
+var fbref = new Firebase('https://musifavs.firebaseio.com')
+var fromnow = require('../vendor/fromnow')
+
 /*
  * Simple wrapper around post objects.
  */
-function Post(opts) {
+function Post(opts, key) {
   var defaults = require('lodash/object/defaults')
 
   defaults(this, opts, {
-    date: new Date(),
     title: '',
     desc: '',
     embed: {},
     favorited: false,
     isPersisted: false
   })
+
+  this.date = this.date ? new Date(this.date) : new Date()
+
+  if (key !== undefined) {
+    this.isPersisted = true
+    this.key = key
+  }
 }
 
-Post.demo = function() {
-  return new Post({
-    title: 'Oh my god!',
-    desc: 'Jonathan Joestar Adventures',
-    embed: {
-      type: 'youtube',
-      url: 'https://www.youtube.com/watch?v=P9J5tYShNY8',
-      videoId: 'P9J5tYShNY8'
-    },
-    isPersisted: true
-  });
+Post.prototype.niceDate = function() {
+  return fromnow(this.date)
 }
 
-Post.prototype.update = function(opts) {
+Post.attributes = ['date', 'title', 'desc', 'embed', 'favorited']
+
+Post.prototype.attributes = function() {
+  var pick = require('lodash/object/pick')
+  return pick(this, Post.attributes)
+}
+
+Post.prototype.setAttributes = function(opts) {
   var merge = require('lodash/object/merge')
+  var yth = require('../lib/youtube')
 
   merge(this, opts)
 
-  // try to update the embed type, if valid.
-  if (opts.embed && opts.embed.url) {
-    var youtubeMatch = (/youtube.com.+\?v=([a-zA-z0-9]+)/i).exec(opts.embed.url)
+  // Try to update the embed data
+  // TODO: parse other services (soundcloud, bandcamp, etc.)
+  var videoId = yth.extractVideoIdFromUrl((opts.embed || {}).url)
 
-    if (youtubeMatch.length) {
-      this.embed.type = 'youtube'
-      this.embed.videoId = youtubeMatch[1]
-    } else {
-      this.embed.type = undefined
-    }
+  if (videoId) {
+    this.embed.type = 'youtube'
+    this.embed.videoId = videoId
   }
 
   return this
 }
 
-Post.prototype.save = function(callback) {
-  this.isPersisted = true
-  if (callback) callback(this)
+Post.prototype.create = function(callback) {
+  var merge = require('lodash/object/merge')
+  var Posts = require('./posts')
+
+  // Posts are always saved by the currently logged user
+  var uid = Users.current.uid
+  var ref = fbref.child('user_posts/' + uid)
+  var date = new Date()
+  var attrs = merge(this.attributes(), {date: date.valueOf(), uid: uid})
+
+  var result = ref.push(attrs, function() {
+    this.key = result.key()
+    this.isPersisted = true
+    this.date = date
+    result.setPriority(date.valueOf())
+    if (callback) { callback(this) }
+    Posts.trigger('posts:user:saved', this)
+  }.bind(this))
+}
+
+Post.prototype.save = function() {
+  if (!this.key) {
+    console.log("can't update a post without key")
+  }
+
+  // posts are always updated by the currently logged user
+  var ref = fbref.child('user_posts/' + Users.current.uid + "/" + this.key)
+
+  ref.update(this.attributes(), function(error){
+    if (error) {
+      console.log(error)
+    } else {
+      Posts.trigger('posts:user:updated', this)
+    }
+  })
 }
 
 Post.prototype.validationResult = function() {

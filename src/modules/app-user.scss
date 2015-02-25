@@ -14,11 +14,16 @@ app-user {
 .profile {
   order: 1;
   min-width: 384px;
-  background-color: #e7e7e7;
 }
 
 .profile-info {
-  margin: 1em;
+  background-color: #e9e9e9;
+  display: table;
+  margin: 0.5em;
   padding: 0.5em;
-  border: 1px solid green;
+  box-shadow: 5px 5px 5px #ddd;
+
+  .profile-pic * {
+    border: 10px solid black;
+  }
 }

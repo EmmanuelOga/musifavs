@@ -2,48 +2,86 @@
   <div class='flex-content-wrapper'>
     <aside class='profile'>
       <div class='profile-info'>
-        Profile
+        <ul class='fa-ul'>
+          <li class='profile-pic'>
+            <img src={user.avatarUrl} />
+          </li>
+          <li>
+            <i class='fa-li fa fa-link'></i>
+            <a href="{user.url}">{user.displayName}</a><br>
+          </li>
+
+          <li>
+            <i class='fa-li fa fa-user'></i>
+            {user.description}
+          </li>
+
+          <li>
+            <i class='fa-li fa fa-map-marker'></i>
+            {user.location}
+          </li>
+
+          <li>
+            <i class='fa-li fa fa-twitter-square'></i>
+            <a href="https://twitter.com/{user.displayName}">@{user.displayName}</a>
+          </li>
+        </ul>
       </div>
     </aside>
 
     <main class='main' role='main'>
-      <div if={noposts} class='post-placeholder'>
+      <app-post if={newPost} post={newPost}></app-post>
+
+      <div if={!newPost && posts.length === 0} class='post-placeholder'>
         <h1>Hey!&nbsp;<i class='fa fa-child'></i>&nbsp;<i class='fa fa-play'></i></h1>
         <p>
           This user has not posted anything yet. Please check back later!
         </p>
       </div>
 
-      <app-post if={newPost} post={newPost} editor={true}></app-post>
-      <app-post each={posts} post={this}></app-post>
+      <app-post each={post, i in posts} post={post}></app-post>
     </main>
   </div>
 
   <script>
     var Dispatcher = require('../app/dispatcher')
     var Post = require('../app/post')
+    var Users = require('../app/users')
 
-    this.noposts = false
+    this.user = Users.current
     this.posts = []
+    this.userPosts = {}
 
-    Dispatcher.on('user:posts', function(user) {
-      Dispatcher.trigger('posts:user:load', user)
-    })
+    Dispatcher.on('posts:child_added', function(uid, post){
+      if (!this.userPosts[uid]) {
+        this.userPosts[uid] = []
+      }
+      this.userPosts[uid].unshift(post)
+      this.update({posts: this.userPosts[uid]})
+    }.bind(this))
+
+    Dispatcher.on('posts:removed', function(uid, key) {
+      var reject = require('lodash/collection/reject')
+      var posts = this.userPosts[uid]
+
+      if (posts) {
+        posts = reject(posts, function(post){ return post.key == key })
+      }
+
+      this.userPosts[uid] = posts
+      this.update({posts: this.userPosts[uid]})
+    }.bind(this))
+
+    Dispatcher.on('user:posts', function(uid) {
+      Dispatcher.trigger('posts:user:load', uid)
+    }.bind(this))
 
     Dispatcher.on('user:newpost', function(user) {
       this.update({newPost: new Post()})
     }.bind(this))
 
-    Dispatcher.on('user:cancelcreatepost', function(fresh) {
+    Dispatcher.on('user:cancelcreatepost', function() {
       this.update({newPost: null})
-    }.bind(this))
-
-    Dispatcher.on('user:createpost', function(fresh) {
-      this.update({newPost: null, posts: [fresh].concat(this.posts)})
-    }.bind(this))
-
-    Dispatcher.on('posts:user:available', function(posts){
-      this.update({ posts: posts })
     }.bind(this))
   </script>
 </app-user>
