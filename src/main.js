@@ -39,26 +39,32 @@ function displayModule(target) {
  * Setup routes.
  */
 
+function ensureUser(ctx, next) {
+  console.log('before handling a post route, make sure there\'s a logged user')
+  next()
+}
+
 var page = require('page')
 
-page('/posts/favorites', function postsFavorites() {
+page('/posts/favorites', ensureUser, function postsFavorites() {
   displayModule('user')
   Dispatcher.trigger('user:favorites')
 })
 
-page('/posts/new', function postsNew() {
+page('/posts/new', ensureUser, function postsNew() {
   displayModule('user')
+  Dispatcher.trigger('user:posts')
   Dispatcher.trigger('user:newpost')
 })
 
-page('/posts/', function posts() {
+page('/posts/', ensureUser, function posts() {
   displayModule('user')
   Dispatcher.trigger('user:posts')
 })
 
 page('/:user', function user(ctx, next) {
   displayModule('user')
-  Dispatcher.trigger('user', ctx.params.user)
+  Dispatcher.trigger('user:posts', ctx.params.user)
 })
 
 page('/', function root() {

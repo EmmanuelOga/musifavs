@@ -7,29 +7,42 @@
     </aside>
 
     <main class='main' role='main'>
-      <div class={'app-hidden': !postsUnavailable, 'post-placeholder' : true }>
+      <div if={noposts} class='post-placeholder'>
         <h1>Hey!&nbsp;<i class='fa fa-child'></i>&nbsp;<i class='fa fa-play'></i></h1>
         <p>
           This user has not posted anything yet. Please check back later!
         </p>
       </div>
 
+      <app-post if={newPost} post={newPost} editor={true}></app-post>
       <app-post each={posts} post={this}></app-post>
     </main>
   </div>
 
   <script>
     var Dispatcher = require('../app/dispatcher')
+    var Post = require('../app/post')
 
-    this.postsUnavailable = false
+    this.noposts = false
     this.posts = []
 
-    Dispatcher.on('user', function(user) {
+    Dispatcher.on('user:posts', function(user) {
       Dispatcher.trigger('posts:user:load', user)
     })
 
+    Dispatcher.on('user:newpost', function(user) {
+      this.update({newPost: new Post()})
+    }.bind(this))
+
+    Dispatcher.on('user:cancelcreatepost', function(fresh) {
+      this.update({newPost: null})
+    }.bind(this))
+
+    Dispatcher.on('user:createpost', function(fresh) {
+      this.update({newPost: null, posts: [fresh].concat(this.posts)})
+    }.bind(this))
+
     Dispatcher.on('posts:user:available', function(posts){
-      console.log('new posts available')
       this.update({ posts: posts })
     }.bind(this))
   </script>

@@ -12,7 +12,7 @@ function Posts() {
   var self = this
 
   this.on('posts:user:load', function(){
-    self.trigger('posts:user:available', [new Post()])
+    self.trigger('posts:user:available', [Post.demo()])
   })
 }
 

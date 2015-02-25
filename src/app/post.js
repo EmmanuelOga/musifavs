@@ -6,15 +6,25 @@ function Post(opts) {
 
   defaults(this, opts, {
     date: new Date(),
-    title: 'Post Title',
+    title: '',
+    desc: '',
+    embed: {},
+    favorited: false,
+    isPersisted: false
+  })
+}
+
+Post.demo = function() {
+  return new Post({
+    title: 'Oh my god!',
+    desc: 'Jonathan Joestar Adventures',
     embed: {
       type: 'youtube',
       url: 'https://www.youtube.com/watch?v=P9J5tYShNY8',
       videoId: 'P9J5tYShNY8'
     },
-    desc: 'Post Description',
-    favorited: false
-  })
+    isPersisted: true
+  });
 }
 
 Post.prototype.update = function(opts) {
@@ -35,6 +45,11 @@ Post.prototype.update = function(opts) {
   }
 
   return this
+}
+
+Post.prototype.save = function(callback) {
+  this.isPersisted = true
+  if (callback) callback(this)
 }
 
 Post.prototype.validationResult = function() {

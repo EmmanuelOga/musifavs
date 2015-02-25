@@ -12,8 +12,8 @@ function Dispatcher() {
 
   function callTriggers() {
     var args = [].slice.call(arguments);
+    console.log('\u2022 triggering ' + args.join(', '))
     triggers.forEach(function(t){
-      // console.log('triggered ' + args + ' on ' + t.name);
       t.trigger.apply(null, args)
     });
   };

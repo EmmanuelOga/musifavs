@@ -1,25 +1,22 @@
 <app-post>
-  <app-post-form class={'app-hidden': !editing}></app-post-form>
-  <app-post-show class={'app-hidden': editing}></app-post-show>
+  {opts.debug}
+  <app-post-form if={editing}></app-post-form>
+  <app-post-show if={!editing}></app-post-show>
 
   <script>
-    var Dispatcher = require('../app/dispatcher')
     var Post = require('../app/post')
 
+    this.post = new Post(opts.post)
+    this.editing = !this.post.isPersisted
+
     show(data) {
-      this.update({
-        editing: false,
-        post: (data ? new Post(data) : this.post)
-      })
+      var p = (data ? new Post(data) : this.post);
+      this.update({editing: false, post: p})
     }
 
     edit() {
-      this.editing = true
-      this.update()
+      this.update({editing: true})
     }
-
-    editing = false
-    post = new Post(opts.post)
   </script>
 </app-post>
 
@@ -33,7 +30,7 @@
   </div>
 
   <p class='post-show-description'>
-    {post.desc}
+    <i class='fa fa-child fa-2x'></i>&nbsp;{post.desc}
   </p>
 
   <div class='post-actions'>
@@ -43,7 +40,9 @@
   </div>
 
   <script>
-    this.parent.on('update', function(){
+    this.post = this.parent.post
+
+    this.parent.on('update mount', function(){
       this.update({post: this.parent.post})
     }.bind(this))
 
@@ -86,22 +85,42 @@
   </form>
 
   <script>
-    this.parent.on('update', function(){
+    var values = require('lodash/object/values')
+    var Post = require('../app/post')
+    var Dispatcher = require('../app/dispatcher')
+
+    this.post = this.parent.post
+
+    this.parent.on('update mount', function(){
       this.update({post: this.parent.post})
     }.bind(this))
+
+    this.on('update mount', function(){
+      // Hack: riot should reset these values...
+      if (!this.post.isPersisted) {
+        this.postTitle.value = ''
+        this.postDescription.value = ''
+        this.embedUrl.value = ''
+      }
+    })
 
     message(msg) {
       this.msg.innerText = msg
     }
 
     undo(ev) {
-      this.parent.show()
+      if (this.post.isPersisted) {
+        // Hack: riot should reset these values...
+        this.postTitle.value = this.post.title
+        this.postDescription.value = this.post.desc
+        this.embedUrl.value = this.post.embed.url
+        this.parent.show()
+      } else {
+        Dispatcher.trigger('user:cancelcreatepost')
+      }
     }
 
     publish(ev) {
-      var values = require('lodash/object/values')
-      var Post = require('../app/post')
-
       var newPost = new Post(this.post).update({
         title: this.postTitle.value,
         desc: this.postDescription.value,
@@ -111,7 +130,13 @@
       var result = newPost.validationResult()
 
       if (result.isValid) {
-        this.parent.show(newPost)
+        newPost.save() // We could wait to trigger until is saved but we'll assume it will succeed.
+
+        if (this.post.isPersisted) {
+          this.parent.show(newPost)
+        } else {
+          Dispatcher.trigger('user:createpost', newPost)
+        }
       } else {
         var msg = values(result.errors).join(', ')
         this.urlInvalid = !!result.errors.url
