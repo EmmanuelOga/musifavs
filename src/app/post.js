@@ -27,20 +27,14 @@ var listeners = {},
     defaults = require('lodash/object/defaults'),
     merge = require('lodash/object/merge'),
     pick = require('lodash/object/pick'),
-    timeago = require('../vendor/fromnow'),
+    isString = require('lodash/lang/isString'),
+    isDate = require('lodash/lang/isDate'),
+    isEmpty = require('lodash/lang/isEmpty'),
+    timeago = require('../lib/fromnow'),
     yt = require('../lib/youtube')
 
 function Post(opts, key) {
-  defaults(this, opts, Post.defaults)
-
-  if (! this.date instanceof Date) {
-    this.date = this.date ? new Date(this.date) : new Date()
-  }
-
-  if (key !== undefined) {
-    this.stored = true
-    this.key = key
-  }
+  this.setattr(defaults({}, opts, {key: key}, Post.defaults))
 }
 
 // Extend the Post function (not the instances) with pub/sub properties.
@@ -49,12 +43,16 @@ require('riot').observable(Post)
 Post.attributes = ['date', 'title', 'desc', 'embed', 'favorited']
 Post.defaults = {title: '', desc: '', embed: {}, favorited: false, stored: false}
 
+Post.prototype.unstored = function(other) {
+  return isEmpty(this.key)
+}
+
 Post.prototype.equals = function(other) {
   return this.key === other.key
 }
 
 Post.prototype.toString = function() {
-  return JSON.stringify(this.getattr())
+  return JSON.stringify(pick(this.getattr(), ['title', 'key']))
 }
 
 // Returns only Post *data* attributes
@@ -65,6 +63,14 @@ Post.prototype.getattr = function() {
 //
 Post.prototype.setattr = function(opts) {
   merge(this, opts)
+
+  this.stored = (this.key !== undefined)
+
+  if (isString(this.date)) {
+    this.date = new Date(Date.parse(this.date))
+  } else if (! isDate(this.date)) {
+    this.date = this.date ? new Date(this.date) : new Date()
+  }
 
   if (opts.embed) {
     // TODO: parse other services (soundcloud, bandcamp, etc.)
@@ -146,7 +152,7 @@ Post.on('store:posts:do:retrieve', function retrieve(uid) {
 
 Post.on('store:posts:do:stopretrieve', function stopretrieve(uid) {
   if (listeners[uid]) {
-    fbref.off(listeners[uid])
+    fbref.off('child_added', listeners[uid])
     delete listeners[uid]
     Post.trigger('store:posts:did:stopretrieve', uid)
   }

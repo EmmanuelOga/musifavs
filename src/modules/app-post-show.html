@@ -20,7 +20,7 @@
   </div>
 
   <script>
-    var c, disp = require('../lib/dispatcher')
+    var c, disp = require('../lib/dispatcher'), tr = disp.trigger
 
     this.on('unmount', function() { c.destroy() })
 
@@ -28,26 +28,18 @@
       c = disp.context()
     })
 
-    this.on('mount', function(){
-      console.log('show mounted')
-    })
-
-    this.on('unmount', function(){
-      console.log('show unmounted')
-    })
-
     this.post = opts.post
 
     edit(ev) {
-      c.trigger('module:post-show:do:edit', this.post)
+      tr('module:post-show:do:edit', this.post)
     }
 
     toggleFav(ev) {
-      c.trigger('module:post-show:do:favorite', this.post)
+      tr('module:post-show:do:favorite', this.post)
     }
 
     remove(ev) {
-      c.trigger('module:post-show:do:remote', this.post)
+      tr('module:post-show:do:remote', this.post)
     }
   </script>
 </app-post-show>

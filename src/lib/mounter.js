@@ -35,6 +35,14 @@ function Mounter() {
   this.lasttags = []
 }
 
+Mounter.prototype.unmount = function() {
+  this.lasttags.forEach(function(data) {
+    data.tag.root.classList.remove(data.name)
+    data.tag.unmount()
+  })
+  this.lasttags = []
+}
+
 /* (selector, tag, opts) :: parameters passed to riot.mount
  *
  * The tagname is added as a class name to the resulting dom element.
@@ -44,20 +52,18 @@ function Mounter() {
  */
 Mounter.prototype.display = function(selector, tagname, opts) {
 
-  this.lasttags.forEach(function(tag) {
-    tag.root.classList.remove(tagname)
-    tag.unmount()
-  })
+  this.unmount()
 
   // tags may return a single element or an array.
   var tags = riot.mount(selector, tagname, opts || {})
 
-  this.lasttags = [].concat(tags)
-
-  this.lasttags.forEach(function(tag) {
-    tag.root.classList.add(tagname)
+  this.lasttags = [].concat(tags).map(function(tag) {
+    return {tag: tag, name: tagname}
   })
 
+  this.lasttags.forEach(function(data) {
+    data.tag.root.classList.add(data.name)
+  })
 }
 
 module.exports = Mounter

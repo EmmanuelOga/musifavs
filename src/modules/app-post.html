@@ -5,37 +5,43 @@
     var Post = require('../app/post')
     var Mounter = require('../lib/mounter')
 
-    var c, disp = require('../lib/dispatcher')
+    this.don = opts.don
+    this.dtr = opts.dtr
 
-    this.on('unmount', function() { c.destroy() })
+    console.log(this)
+    console.log(opts)
 
-    this.on('mount', function() {
-      c = disp.context()
+    this.don('module:post-show:do:edit', function(post){
+      if (this.post.equals(post)) {
+        this.edit()
+      }
+    }.bind(this))
 
-      c.on('module:post-show:do:edit', function(post){
-        if (this.post.equals(post)) {
-          this.edit()
-        }
-      }.bind(this))
-    })
+    this.don('module:post-form:did:cancel', function(post){
+      if (!post.unstored() && this.post.equals(post)) {
+        this.show()
+      }
+    }.bind(this))
 
     var m = new Mounter()
 
+    show(data) {
+      var n = this.root.firstElementChild
+      if (n) {
+        m.display(n, 'app-post-show', {post: this.post})
+      }
+    }
+
+    edit(data) {
+      var n = this.root.firstElementChild
+      if (n) {
+        m.display(n, 'app-post-form', {post: this.post})
+      }
+    }
+
     this.post = new Post(opts.post)
 
-    this.on('mount', function(){
-      console.log('wrapper mounted')
-    })
-
-    this.on('update', function(){
-      console.log('wrapper updated')
-    })
-
-    this.on('unmount', function(){
-      console.log('wrapper unmounted')
-    })
-
-    this.on('mount', function(){
+    this.don('mount', function() {
       if (this.post.stored) {
         this.show()
       } else {
@@ -43,14 +49,5 @@
       }
     })
 
-    show(data) {
-      var n = this.root.firstElementChild
-      m.display(n, 'app-post-show', {post: this.post})
-    }
-
-    edit(data) {
-      var n = this.root.firstElementChild
-      m.display(n, 'app-post-form', {post: this.post})
-    }
   </script>
 </app-post>

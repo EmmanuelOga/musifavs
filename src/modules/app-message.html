@@ -6,7 +6,7 @@
   </div>
 
   <script>
-    var c, disp = require('../lib/dispatcher')
+    var c, disp = require('../lib/dispatcher'), tr = disp.trigger
 
     this.on('unmount', function() { c.destroy() })
 

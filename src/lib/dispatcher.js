@@ -49,7 +49,12 @@ function Dispatcher() {
   }
 
   this.removeStore = function(name) {
-    triggers = reject(triggers, function(t) { t.name === name })
+    var b = triggers.length
+    triggers = reject(triggers, function(t) {
+      return t.name === name
+    })
+    var a = triggers.length
+    console.log('\u2022 Destroying ' + name + ' deleted ' + (b - a) + ' stores. Now tracking ' + triggers.length)
   }
 
   this.addStore(this)
@@ -66,7 +71,7 @@ Dispatcher.prototype.context = function(_name) {
   proxy.name = (_name || '') + uniqueId('dispatcherProxy')
 
   proxy.destroy = function() {
-    console.log('destroying ' + proxy.name)
+    proxy.trigger('destroy')
     disp.removeStore(proxy.name)
     proxy.off('*')
     // cheap fail-fast counter measure :-)

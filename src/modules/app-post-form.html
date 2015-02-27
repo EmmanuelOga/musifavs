@@ -27,10 +27,10 @@
   </form>
 
   <script>
-    var values = require('lodash/object/values')
     var Post = require('../app/post')
+    var values = require('lodash/object/values')
 
-    var c, disp = require('../lib/dispatcher')
+    var c, disp = require('../lib/dispatcher'), tr = disp.trigger
 
     this.on('unmount', function() { c.destroy() })
 
@@ -40,40 +40,12 @@
 
     this.post = opts.post
 
-    this.on('mount', function(){
-      console.log('form mounted')
-    })
-
-    this.on('unmount', function(){
-      console.log('form unmounted')
-    })
-
-    this.on('update', function(){
-      // Hack: riot should reset these values...
-      if (!this.post.isPersisted) {
-        this.postTitle.value = ''
-        this.postDescription.value = ''
-        this.embedUrl.value = ''
-      }
-    }.bind(this))
-
     message(msg) {
       this.msg.innerText = msg
     }
 
     undo(ev) {
-      var page = require('page')
-
-      if (this.post.isPersisted) {
-        // Hack: riot should reset these values...
-        this.postTitle.value = this.post.title
-        this.postDescription.value = this.post.desc
-        this.embedUrl.value = this.post.embed.url
-        this.parent.show()
-      } else {
-        c.trigger('user:cancelcreatepost')
-        page.redirect('/posts')
-      }
+      tr('module:post-form:did:cancel')
     }
 
     publish(ev) {
@@ -91,7 +63,7 @@
           this.parent.show(newPost)
         } else {
           newPost.create()
-          c.trigger('user:cancelcreatepost', newPost)
+          tr('user:cancelcreatepost', newPost)
         }
       } else {
         var msg = values(result.errors).join(', ')

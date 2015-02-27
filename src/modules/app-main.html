@@ -4,28 +4,34 @@
   <script>
     var riot = require('riot')
     var user = require('../app/user').current
-    var c, disp = require('../lib/dispatcher')
+    var disp = require('../lib/dispatcher'), dtr = disp.trigger
     var Mounter = require('../lib/mounter')
 
     var m = new Mounter()
 
     function message(msg) {
-      c.trigger('module:message:do:show', msg)
+      dtr('module:message:do:show', msg)
     }
 
+    var ctx
+
     function route(_uid, action, postid) {
+      if (ctx) ctx.destroy()
+
+      ctx = disp.context()
+
       var uid = (_uid == 'me') ? user.uid : _uid
 
       if (user.logged) {
-        c.trigger('module:navigation:do:showlogout')
+        dtr('module:navigation:do:showlogout')
       } else {
-        c.trigger('module:navigation:do:hidelogout')
+        dtr('module:navigation:do:hidelogout')
       }
 
       switch(action) {
       case 'favorite':
         if (user.logged) {
-          c.trigger('store:posts:do:favorite', uid, postid)
+          dtr('store:posts:do:favorite', uid, postid)
         } else {
           message('Please login to favorite posts.')
           m.display('#mountpoint', 'app-login')
@@ -38,7 +44,7 @@
       case 'favorites':
 
         if (uid) {
-          m.display('#mountpoint', 'app-user', {uid: uid, action: action})
+          m.display('#mountpoint', 'app-user', {uid: uid, action: action, dtr: disp.trigger, don: ctx.on})
         } else {
           message('Please login to access your posts.')
           m.display('#mountpoint', 'app-login')
@@ -49,7 +55,7 @@
       case 'logout':
 
         if (user.logged) {
-          c.trigger('store:users:do:logout')
+          dtr('store:users:do:logout')
         } else {
           window.location.hash = ''
         }
@@ -68,7 +74,7 @@
 
       c.on('store:users:did:login', function(user){
         message('Thank you! You have been logged in.')
-        c.trigger('store:users:do:update', user)
+        dtr('store:users:do:update', user)
       })
 
       c.on('store:users:did:update', function(user) {

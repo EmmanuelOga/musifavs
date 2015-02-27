@@ -24,8 +24,12 @@ var fbref = new Firebase('https://musifavs.firebaseio.com'),
     defaults = require('lodash/object/defaults'),
     pick = require('lodash/object/pick')
 
-function User(opts) {
+function User(opts, uid) {
   defaults(this, opts, User.defaults)
+
+  if (User.current && User.current.uid === uid) {
+    defaults(this, User.current)
+  }
 }
 
 /*
@@ -49,7 +53,7 @@ User.defaults = {
 }
 
 User.prototype.toString = function() {
-  return JSON.stringify(this.getattr())
+  return JSON.stringify(pick(this.getattr(), ['displayName', 'logged']))
 }
 
 // Returns only *data* attributes
@@ -114,7 +118,7 @@ User.on('store:users:do:update', function(user) {
 User.on('store:users:do:lookup', function(uid) {
   fbref.child('users').child(uid).once('value', function(snapshot){
     if (snapshot.val()) {
-      User.trigger('store:users:did:lookup', uid, new User(snapshot.val()))
+      User.trigger('store:users:did:lookup', uid, new User(snapshot.val(), uid))
     } else {
       User.trigger('store:users:failed:lookup', uid)
     }
