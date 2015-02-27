@@ -1,0 +1,39 @@
+<app-navigation>
+  <nav class='navigation'>
+    <ul class='nav-actions' role='navigation'>
+      <li><a href='#me/new'>New Post</a></li>
+      <li><a href='#me/posts'>My Posts</a></li>
+      <li><a href='#me/favorites'>My Favorites</a></li>
+      <li><a href='#me/logout' class={app-hidden: !logged}>Log Out</a></li>
+    </ul>
+  </nav>
+
+  <script>
+    var c, disp = require('../lib/dispatcher')
+
+    this.logged = false
+
+    this.on('unmount', function() { c.destroy() })
+
+    this.on('mount', function() {
+      c = disp.context()
+
+      c.on('module:navigation:do:showlogout', function(){
+        this.showlogout()
+      }.bind(this))
+
+      c.on('module:navigation:do:hidelogout', function(){
+        this.hidelogout()
+      }.bind(this))
+    })
+
+    showlogout() {
+      this.update({logged: true})
+    }
+
+    hidelogout() {
+      this.update({logged: false})
+    }
+
+  </script>
+</app-navigation>

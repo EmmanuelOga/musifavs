@@ -1,0 +1,33 @@
+.app-post-form {
+  display: block;
+  padding: 1em;
+  box-shadow: 2px 5px 5px #ddc;
+
+  .invalid {
+    background-color: #fdd;
+  }
+
+  label {
+    color: #555;
+    font-size: 0.8em;
+    margin-top: 1em;
+    display: block;
+  }
+  input, textarea {
+    width: 32em;
+  }
+  select {
+    width: 16em;
+  }
+  textarea {
+    margin-top: 1em;
+    min-height: 8em;
+  }
+  .post-form-data {
+    margin-top: 1em;
+  }
+
+  .post-edit-message {
+    float: right;
+  }
+}

@@ -1,4 +1,4 @@
-app-user {
+.app-user {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -23,7 +23,12 @@ app-user {
   padding: 0.5em;
   box-shadow: 5px 5px 5px #ddd;
 
+  ul {
+    line-height: 1.5em;
+  }
+
   .profile-pic * {
-    border: 10px solid black;
+    border: 10px solid #ccc;
+    box-shadow: 0 0 10px white;
   }
 }

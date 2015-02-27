@@ -1,37 +1,36 @@
 <app-front>
-  <div class='flex-content-wrapper'>
-    <main class='main' role='main'>
+  <main class='main' role='main'>
 
-      <img class='responsive-width' src='/assets/music.jpg'>
+    <img class='responsive-width' src='/assets/music.jpg'>
 
-      <div class='front-copy'>
-        <h1>A micro Blog for your favorite Music!</h1>
-        <p>
-          Showcase your favorite music to the world. With MusiFavs you can embed
-          content from different services (YouTube, Bandacamp, Soundcloud, and
-          more!) in a single place.
-        </p>
+    <div class='front-copy'>
+      <h1>A micro Blog for your favorite Music!</h1>
+      <p>
+        Showcase your favorite music to the world. With MusiFavs you can embed
+        content from different services (YouTube, Bandacamp, Soundcloud, and
+        more!) in a single place.
+      </p>
 
-        <h2>Latest Posts</h2>
-        <ul>
-          <li><a href='/someuser' class='route'>CarlitoX</a> posted 'Gone with the wind' (12 hours ago)</li>
-          <li>Tony Motola posted 'SuperViolent' (3 hours ago)</li>
-          <li>Kurt Covain posted 'This this and that' (4 days ago)</li>
-        </ul>
+      <h2>Latest Posts</h2>
+      <ul>
+        <li><a href='#someuser/posts' class='route'>CarlitoX</a> posted 'Gone with the wind' (12 hours ago)</li>
+        <li>Tony Motola posted 'SuperViolent' (3 hours ago)</li>
+        <li>Kurt Covain posted 'This this and that' (4 days ago)</li>
+      </ul>
 
-        <h2>Latest Favorited</h2>
-        <ul>
-          <li>Mingo Cachalafusa favorited 'Gone with the wind' (12 hours ago)</li>
-          <li>Sorete favorited 'SuperViolent' (3 hours ago)</li>
-          <li>Mongo Longo favorited 'This this and that' (4 days ago)</li>
-        </ul>
-      </div>
-
-    </main>
-
-  </div>
+      <h2>Latest Favorited</h2>
+      <ul>
+        <li>Mingo Cachalafusa favorited 'Gone with the wind' (12 hours ago)</li>
+        <li>Sorete favorited 'SuperViolent' (3 hours ago)</li>
+        <li>Mongo Longo favorited 'This this and that' (4 days ago)</li>
+      </ul>
+    </div>
+  </main>
 
   <script>
-    var Dispatcher = require('../app/dispatcher')
+    var c, disp = require('../lib/dispatcher')
+
+    this.on('mount', function() { c = disp.context() })
+    this.on('unmount', function() { c.destroy() })
   </script>
 </app-front>

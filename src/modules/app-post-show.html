@@ -1,0 +1,53 @@
+<app-post-show>
+  <p>{post.timeago()}</p>
+
+  <h2><i class='fa fa-play'></i>&nbsp;{post.title}</h2>
+
+  <div class='post-show-embed'>
+    <iframe if={post.embed.type == 'youtube'} type='text/html' width='640' height='260'
+      src='http://www.youtube.com/embed/{post.embed.videoId}'
+      frameborder='0'></iframe>
+  </div>
+
+  <p class='post-show-description'>
+    <i class='fa fa-child fa-2x'></i>&nbsp;{post.desc}
+  </p>
+
+  <div class='post-actions'>
+    <a title='Favorite' href='#' onclick={toggleFav} class='{post-favorited: post.favorited}'><i class='fa fa-heart'></i>&nbsp;Favorite</a>
+    <a title='Edit'     href='#' onclick={edit}><i class='fa fa-edit'></i>&nbsp;Edit</a>
+    <a title='Remove'   href='#' onclick={remove}><i class='fa fa-trash'></i>&nbsp;Remove</a>
+  </div>
+
+  <script>
+    var c, disp = require('../lib/dispatcher')
+
+    this.on('unmount', function() { c.destroy() })
+
+    this.on('mount', function() {
+      c = disp.context()
+    })
+
+    this.on('mount', function(){
+      console.log('show mounted')
+    })
+
+    this.on('unmount', function(){
+      console.log('show unmounted')
+    })
+
+    this.post = opts.post
+
+    edit(ev) {
+      c.trigger('module:post-show:do:edit', this.post)
+    }
+
+    toggleFav(ev) {
+      c.trigger('module:post-show:do:favorite', this.post)
+    }
+
+    remove(ev) {
+      c.trigger('module:post-show:do:remote', this.post)
+    }
+  </script>
+</app-post-show>

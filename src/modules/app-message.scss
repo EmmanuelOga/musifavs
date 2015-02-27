@@ -1,11 +1,8 @@
-app-message {
-  display: block;
+.app-message {
   position: absolute;
   top: 5em; left: 5em; right: 5em;
   z-index: 2;
-}
 
-.app-message {
   background-color: #efefaa;
   opacity: 0.9;
 

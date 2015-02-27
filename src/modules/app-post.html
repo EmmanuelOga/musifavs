@@ -1,161 +1,56 @@
 <app-post>
-  <app-post-form if={editing}></app-post-form>
-  <app-post-show if={!editing}></app-post-show>
+  <div></div>
 
   <script>
     var Post = require('../app/post')
+    var Mounter = require('../lib/mounter')
+
+    var c, disp = require('../lib/dispatcher')
+
+    this.on('unmount', function() { c.destroy() })
+
+    this.on('mount', function() {
+      c = disp.context()
+
+      c.on('module:post-show:do:edit', function(post){
+        if (this.post.equals(post)) {
+          this.edit()
+        }
+      }.bind(this))
+    })
+
+    var m = new Mounter()
 
     this.post = new Post(opts.post)
-    this.editing = !this.post.isPersisted
+
+    this.on('mount', function(){
+      console.log('wrapper mounted')
+    })
+
+    this.on('update', function(){
+      console.log('wrapper updated')
+    })
+
+    this.on('unmount', function(){
+      console.log('wrapper unmounted')
+    })
+
+    this.on('mount', function(){
+      if (this.post.stored) {
+        this.show()
+      } else {
+        this.edit()
+      }
+    })
 
     show(data) {
-      var p = (data ? new Post(data) : this.post);
-      this.update({editing: false, post: p})
+      var n = this.root.firstElementChild
+      m.display(n, 'app-post-show', {post: this.post})
     }
 
-    edit() {
-      this.update({editing: true})
+    edit(data) {
+      var n = this.root.firstElementChild
+      m.display(n, 'app-post-form', {post: this.post})
     }
   </script>
 </app-post>
-
-<app-post-show>
-  <p>{post.niceDate()}</p>
-  <h2><i class='fa fa-play'></i>&nbsp;{post.title}</h2>
-
-  <div class='post-show-embed'>
-    <iframe if={post.embed.type == 'youtube'} type='text/html' width='640' height='260'
-      src='http://www.youtube.com/embed/{post.embed.videoId}'
-      frameborder='0'></iframe>
-  </div>
-
-  <p class='post-show-description'>
-    <i class='fa fa-child fa-2x'></i>&nbsp;{post.desc}
-  </p>
-
-  <div class='post-actions'>
-    <a title='Favorite' href='#' onclick={toggleFav} class='{post-favorited: post.favorited}'><i class='fa fa-heart'></i>&nbsp;Favorite</a>
-    <a title='Edit'     href='#' onclick={edit}><i class='fa fa-edit'></i>&nbsp;Edit</a>
-    <a title='Remove'   href='#' onclick={remove}><i class='fa fa-trash'></i>&nbsp;Remove</a>
-  </div>
-
-  <script>
-    var Dispatcher = require('../app/dispatcher')
-
-    this.post = this.parent.post
-
-    this.parent.on('update mount', function(){
-      this.update({post: this.parent.post})
-    }.bind(this))
-
-    edit(ev) {
-      this.parent.edit()
-    }
-
-    toggleFav(ev) {
-      this.post.favorited = !this.post.favorited
-    }
-
-    remove(ev) {
-      Dispatcher.trigger('posts:destroy', this.post)
-    }
-  </script>
-</app-post-show>
-
-<app-post-form>
-  <form name='postForm'>
-    <h2>{this.post.isPersisted ? 'Editing Post' : 'New Post'}</h2>
-
-    <p>
-      Provide the resource url to share, a title and a description.
-    </p>
-
-    <div class='post-form-embed'>
-      <label>Embed Url (e.g. YouTube Url)</label>
-      <input name='embedUrl' type='url' value={post.embed.url} class={invalid: urlInvalid}
-             placeholder='https://www.youtube.com/watch?v=P9J5tYShNY8' />
-    </div>
-
-    <div class='post-form-data'>
-      <input name='postTitle' type='text' value={post.title} class={invalid: titleInvalid}
-             title='Post Title' placeholder='Title' />
-      <textarea name='postDescription' value={post.desc}
-             title='Post Description' placeholder='Description' /></textarea>
-    </div>
-
-    <div class='post-actions'>
-      <a title='Undo' onclick={undo} href='#'><i class='fa fa-times-circle'></i>&nbsp;Cancel</a>
-      <a title='Save and Publish' onclick={publish} href='#'><i class='fa fa-save'></i>&nbsp;Save</a>
-      <span class='post-edit-message' name='msg'>{editMessage}</span>
-    </div>
-  </form>
-
-  <script>
-    var values = require('lodash/object/values')
-    var Post = require('../app/post')
-    var Dispatcher = require('../app/dispatcher')
-
-    this.post = this.parent.post
-
-    this.parent.on('update mount', function(){
-      this.update({post: this.parent.post})
-    }.bind(this))
-
-    this.validating = false
-
-    this.on('update', function(){
-      // Hack: riot should reset these values...
-      if (!this.post.isPersisted && !this.validating) {
-        this.postTitle.value = ''
-        this.postDescription.value = ''
-        this.embedUrl.value = ''
-      }
-    }.bind(this))
-
-    message(msg) {
-      this.msg.innerText = msg
-    }
-
-    undo(ev) {
-      var page = require('page')
-
-      if (this.post.isPersisted) {
-        // Hack: riot should reset these values...
-        this.postTitle.value = this.post.title
-        this.postDescription.value = this.post.desc
-        this.embedUrl.value = this.post.embed.url
-        this.parent.show()
-      } else {
-        this.validating = false
-        Dispatcher.trigger('user:cancelcreatepost')
-        page.redirect('/posts')
-      }
-    }
-
-    publish(ev) {
-      var newPost = new Post(this.post).setAttributes({
-        title: this.postTitle.value,
-        desc: this.postDescription.value,
-        embed: {url: this.embedUrl.value}
-      })
-
-      var result = newPost.validationResult()
-
-      if (result.isValid) {
-        if (this.post.isPersisted) {
-          newPost.save()
-          this.parent.show(newPost)
-        } else {
-          newPost.create()
-          Dispatcher.trigger('user:cancelcreatepost', newPost)
-        }
-      } else {
-        var msg = values(result.errors).join(', ')
-        this.validating = true
-        this.urlInvalid = !!result.errors.url
-        this.titleInvalid = !!result.errors.title
-        this.message('Sorry, the post can\'t be saved: ' + msg + '.')
-      }
-    }
-  </script>
-</app-post-form>

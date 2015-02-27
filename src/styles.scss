@@ -1,11 +1,14 @@
 @import "./vendor/normalize.scss";
+
 @import "./styles/base.scss";
 @import "./styles/layout.scss";
-@import "./styles/navigation.scss";
 @import "./styles/state.scss";
 
-@import "./modules/app-authenticate.scss";
-@import "./modules/app-front.scss";
+@import "./modules/app-login.scss";
+@import "./modules/app-main.scss";
 @import "./modules/app-message.scss";
+@import "./modules/app-navigation.scss";
+@import "./modules/app-post-form.scss";
+@import "./modules/app-post-show.scss";
 @import "./modules/app-post.scss";
 @import "./modules/app-user.scss";

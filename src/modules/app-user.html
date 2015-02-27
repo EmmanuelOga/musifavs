@@ -1,5 +1,6 @@
 <app-user>
   <div class='flex-content-wrapper'>
+
     <aside class='profile'>
       <div class='profile-info'>
         <ul class='fa-ul'>
@@ -25,6 +26,10 @@
             <i class='fa-li fa fa-twitter-square'></i>
             <a href="https://twitter.com/{user.displayName}">@{user.displayName}</a>
           </li>
+
+          <li>
+            Displaying {this.posts.length} Posts
+          </li>
         </ul>
       </div>
     </aside>
@@ -39,49 +44,59 @@
         </p>
       </div>
 
-      <app-post each={post, i in posts} post={post}></app-post>
+      <app-post class='app-post' each={post, i in posts} post={post}></app-post>
     </main>
   </div>
 
   <script>
-    var Dispatcher = require('../app/dispatcher')
-    var Post = require('../app/post')
-    var Users = require('../app/users')
+    var c, disp = require('../lib/dispatcher')
 
-    this.user = Users.current
     this.posts = []
-    this.userPosts = {}
+    this.newPost = null
 
-    Dispatcher.on('posts:child_added', function(uid, post){
-      if (!this.userPosts[uid]) {
-        this.userPosts[uid] = []
+    this.on('unmount', function() { c.destroy() })
+
+    this.on('mount', function() {
+      c = disp.context()
+
+      c.on('store:users:failed:lookup', function(uid) {
+        c.trigger('module:user:failed:mount', uid)
+      })
+
+      c.on('store:users:did:lookup', function(uid, user) {
+        c.trigger('store:posts:do:retrieve', uid)
+        this.update({user: user})
+      }.bind(this))
+
+      c.on('store:posts:did:retrieve', function(post){
+        this.posts.unshift(post)
+        this.update()
+      }.bind(this))
+
+      c.on('store:posts:did:destroy', function(post) {
+        var reject = require('lodash/collection/reject')
+        var posts = reject(posts, function(post){ return post.key == key })
+        this.update({posts: posts})
+      }.bind(this))
+
+      c.on('user:newpost', function(user) {
+        this.update({newPost: new Post()})
+      }.bind(this))
+
+      c.on('module:user:do:cancelcreatepost', function() {
+        this.update({newPost: null})
+      }.bind(this))
+    })
+
+    this.on('unmount', function() {
+      if (this.user) {
+        c.trigger('store:posts:do:stopretrieve', this.user.uid)
       }
-      this.userPosts[uid].unshift(post)
-      this.update({posts: this.userPosts[uid]})
-    }.bind(this))
+    })
 
-    Dispatcher.on('posts:removed', function(uid, key) {
-      var reject = require('lodash/collection/reject')
-      var posts = this.userPosts[uid]
+    this.on('mount', function() {
+      c.trigger('store:users:do:lookup', opts.uid)
+    })
 
-      if (posts) {
-        posts = reject(posts, function(post){ return post.key == key })
-      }
-
-      this.userPosts[uid] = posts
-      this.update({posts: this.userPosts[uid]})
-    }.bind(this))
-
-    Dispatcher.on('user:posts', function(uid) {
-      Dispatcher.trigger('posts:user:load', uid)
-    }.bind(this))
-
-    Dispatcher.on('user:newpost', function(user) {
-      this.update({newPost: new Post()})
-    }.bind(this))
-
-    Dispatcher.on('user:cancelcreatepost', function() {
-      this.update({newPost: null})
-    }.bind(this))
   </script>
 </app-user>
