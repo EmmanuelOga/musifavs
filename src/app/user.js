@@ -139,6 +139,6 @@ fbref.onAuth(function authDataCallback(authData) {
 
 // Eagerly check auth. state.
 // NOTE: This could be removed to avoid fb's sync. auth check
-updateAuth(fbref.getAuth())
+// updateAuth(fbref.getAuth())
 
 module.exports = User
