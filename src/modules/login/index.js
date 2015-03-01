@@ -1,25 +1,28 @@
 var template = require('./login.html')
 
-function AppFront(ctx) {
+function Front(ctx, node, options) {
+  this.ctx = ctx
+
+  this.node = node
+  this.node.innerHTML = template(options)
+
+  this.list = this.node.querySelector('.login-links')
+
+  this.listener = function(ev) {
+    if (ev.target.classList.include('twitter-login')) {
+      this.ctx.trigger('store:users:do:login', 'twitter')
+    } else {
+      this.ctx.trigger('module:message:do:show', 'Authenticating with this provider is not available yet.')
+    }
+  }
+
+  this.list.addEventListener('click', this.listener)
 }
 
-AppFront.prototype.load = function(ctx, node, options) {
-  var html = template(options)
-  node.innerHTML = html
-
-  tr = this.ctx.trigger
-
-  node.querySelector('#twitter-login').addEventHandler('click', function(ev) {
-    tr('store:users:do:login', 'twitter')
-  })
-
-  node.querySelector('#twitter-login').addEventHandler('click', function(ev) {
-    tr('module:message:do:show', 'Authenticating with Google is not available yet.')
-  })
-
-  node.querySelector('#twitter-login').addEventHandler('click', function(ev) {
-    tr('module:message:do:show', 'Authenticating with Facebook is not available yet.')
-  })
+Front.prototype.unload = function() {
+  this.list.removeEventListener('click', this.listener)
+  this.node.innerHTML = ''
+  this.ctx.destroy()
 }
 
-module.exports = new AppFront()
+module.exports = Front

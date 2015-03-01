@@ -12,13 +12,14 @@ d.addStore(User)
 // Modules are small wrappers for inserting html templates into the page.
 
 // Modules displayed all the time:
-require('./modules/message').
-  load(d, document.querySelector('#app-navigation'))
+var Message = require('./modules/message'),
+  Navigation = require('./modules/navigation')
 
-require('./modules/navigation').
-  load(d, document.querySelector('#app-message'))
+var msgmod = new Message(d.context(), document.querySelector('#app-message'))
+var navmod = new Navigation(d.context(), document.querySelector('#app-navigation'))
 
-// "Page" Modules: (switched to display different things)
+// "Page" Modules: (switched to display different things).
+// Required so browserify can find them.
 require('./modules/front')
 require('./modules/login')
 require('./modules/post')
@@ -33,7 +34,8 @@ var lastmod = null
 function loadmod(module, options) {
   if (lastmod) { lastmod.unload() }
   console.log('displaying ' + module)
-  require('./modules/' + module).load(n, options, d)
+  var ctor = require('./modules/' + module)
+  return new ctor(d.context(), n, options)
 }
 
 var tr = d.trigger
@@ -42,10 +44,8 @@ function message(msg) {
   tr('module:message:do:show', msg)
 }
 
-message('testing, 1, 2, 3')
-
 /*
- * d wiring
+ * dispatcher wiring
  */
 
 d.on('store:users:did:login', function(user){
@@ -106,6 +106,7 @@ function route(_uid, action, postid) {
   case 'logout':
 
     if (user.logged) {
+      console.log('logging out')
       tr('store:users:do:logout')
     } else {
       window.location.hash = ''

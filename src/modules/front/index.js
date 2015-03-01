@@ -1,10 +1,12 @@
 var template = require('./front.html')
 
-function AppFront() {
+function Front(ctx, node, options) {
+  this.node = node
+  this.node.innerHTML = template(options)
 }
 
-AppFront.prototype.load = function(node, options, ctx) {
-  node.innerHTML = template(options)
+Front.prototype.unload = function() {
+  this.node.innerHTML = ''
 }
 
-module.exports = new AppFront()
+module.exports = Front
