@@ -75,7 +75,7 @@ function updateAuth(authData) {
   if (authData && authData.provider == 'twitter') {
     u.displayName = authData.twitter.displayName
 
-    var p = authData.twitter.cacheduProfile
+    var p = authData.twitter.cachedUserProfile
 
     if (p) {
       u.url = p.url
@@ -91,6 +91,7 @@ function updateAuth(authData) {
 }
 
 User.on('store:users:do:logout', function() {
+  User.current.logout()
   fbref.unauth()
 })
 
@@ -105,7 +106,6 @@ User.on('store:users:do:login', function(provider) {
 })
 
 User.on('store:users:do:update', function(user) {
-  debugger
   fbref.child('users').child(user.uid).set(user.getattr(), function(error){
     if (error) {
       User.trigger('store:users:failed:update', user, error)
@@ -131,11 +131,18 @@ fbref.onAuth(function authDataCallback(authData) {
     updateAuth(authData)
     User.trigger('store:users:did:login', User.current, authData)
   } else {
-    User.current.authData = null
-    User.current.logged = false
+    User.current.logout()
     User.trigger('store:users:did:logout', User.current)
   }
 })
+
+User.prototype.logout = function() {
+  this.logged = false
+  this.authData = null
+  this.uid = null
+  this.provider = 'unknown'
+}
+
 
 // Eagerly check auth. state.
 // NOTE: This could be removed to avoid fb's sync. auth check

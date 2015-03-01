@@ -9,12 +9,14 @@ function Front(ctx, node, options) {
   this.list = this.node.querySelector('.login-links')
 
   this.listener = function(ev) {
-    if (ev.target.classList.include('twitter-login')) {
+    ev.preventDefault()
+
+    if (ev.target.id == 'twitter-login') {
       this.ctx.trigger('store:users:do:login', 'twitter')
     } else {
-      this.ctx.trigger('module:message:do:show', 'Authenticating with this provider is not available yet.')
+      this.ctx.trigger('module:message:do:show', 'Sorry, authenticating with this provider is not available yet.')
     }
-  }
+  }.bind(this)
 
   this.list.addEventListener('click', this.listener)
 }

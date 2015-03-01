@@ -1,7 +1,24 @@
-/*
+var template = require('./user.html'),
+    merge = require('lodash/object/merge')
 
-this.posts = []
-this.newPost = null
+function User(ctx, node, options) {
+  this.ctx = ctx
+
+  this.posts = []
+  this.newPost = null
+
+  this.node = node
+  this.node.innerHTML = template(options)
+}
+
+User.prototype.unload = function() {
+  this.node.innerHTML = ''
+  this.ctx.destroy()
+}
+
+module.exports = User
+
+/*
 
 this.dtr('store:users:do:lookup', opts.uid)
 

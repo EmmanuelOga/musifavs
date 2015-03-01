@@ -2,44 +2,44 @@
   <div class='profile-info'>
     <ul class='fa-ul'>
       <li class='profile-pic'>
-        <img src={user.avatarUrl} />
+        <img src='<%=user.avatarUrl%>' />
       </li>
       <li>
         <i class='fa-li fa fa-link'></i>
-        <a href="{user.url}">{user.displayName}</a><br>
+        <a href='<%=user.url%>'><%=user.displayName%></a><br>
       </li>
 
       <li>
         <i class='fa-li fa fa-user'></i>
-        {user.description}
+        <%=user.description%>
       </li>
 
       <li>
         <i class='fa-li fa fa-map-marker'></i>
-        {user.location}
+        <%=user.location%>
       </li>
 
       <li>
         <i class='fa-li fa fa-twitter-square'></i>
-        <a href="https://twitter.com/{user.displayName}">@{user.displayName}</a>
+        <a href='https://twitter.com/<%=user.displayName%>'>@<%=user.displayName%></a>
       </li>
 
       <li>
-        Displaying {this.posts.length} Posts
+        Displaying <%= 1 %> Posts
       </li>
     </ul>
   </div>
 </aside>
 
 <main class='main' role='main'>
-  <app-post if={newPost} post={newPost} on={on} tr={tr}></app-post>
+  <div class='app-new-post'></div>
 
-  <div if={!newPost && posts.length === 0} class='post-placeholder'>
+  <div class='app-post-placeholder app-hidden'>
     <h1>Hey!&nbsp;<i class='fa fa-child'></i>&nbsp;<i class='fa fa-play'></i></h1>
     <p>
       This user has not posted anything yet. Please check back later!
     </p>
   </div>
 
-  <app-post class='app-post' each={post, i in posts} post={post} don={don} dtr={dtr}></app-post>
+  <div class='app-posts'></div>
 </main>

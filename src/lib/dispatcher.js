@@ -46,6 +46,7 @@ function Dispatcher() {
     var name = _name || store.constructor.name
     triggers.push({trigger: store.trigger, name: name})
     store.trigger = callTriggers
+    // console.log('\u2022 Added store: ' + name + '. Now tracking ' + triggers.length)
   }
 
   this.removeStore = function(name) {
@@ -54,7 +55,7 @@ function Dispatcher() {
       return t.name === name
     })
     var a = triggers.length
-    console.log('\u2022 Destroying ' + name + ' deleted ' + (b - a) + ' stores. Now tracking ' + triggers.length)
+    // console.log('\u2022 Destroying ' + name + '. Deleted ' + (b - a) + ' stores. Now tracking ' + triggers.length)
   }
 
   this.addStore(this)
@@ -68,7 +69,7 @@ function Dispatcher() {
 Dispatcher.prototype.context = function(_name) {
   var disp = this, proxy = riot.observable()
 
-  proxy.name = (_name || '') + uniqueId('dispatcherProxy')
+  proxy.name = (_name || '') + uniqueId('Context')
 
   proxy.destroy = function() {
     proxy.trigger('destroy')
