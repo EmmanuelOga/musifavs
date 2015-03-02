@@ -75,7 +75,8 @@ function User(ctx, node, options) {
 
     if (classes.contains('fav')) {
       ev.preventDefault()
-      this.toggleFav(classes)
+      postmod.post.toggleFav()
+      this.ctx.trigger('store:posts:do:update', postmod.post)
 
     } else if (classes.contains('edit')) {
       ev.preventDefault()
@@ -114,16 +115,6 @@ function User(ctx, node, options) {
   }).bind(this)
 
   this.node.addEventListener('click', this.postslistener)
-}
-
-User.prototype.toggleFav = function(classes) {
-  classes.toggle('post-favorited')
-
-  if (classes.contains('post-favorited')) {
-    console.log('should trigger fav')
-  } else {
-    console.log('should trigger unfav')
-  }
 }
 
 User.prototype.hidePlaceholder = function() {
@@ -173,11 +164,16 @@ User.prototype.editPost = function(postmod) {
   this.postmods[postmod.post.key] = new PostForm(this.ctx, el, {post: postmod.post})
 }
 
-// show a post that was previously bein edited.
+// show a post that was previously being edited, or update it if the data changed.
 User.prototype.showPost = function(postmod) {
   var el = postmod.node
-  postmod.unload()
-  this.postmods[postmod.post.key] = new PostShow(this.ctx, el, {post: postmod.post})
+
+  if (postmod instanceof PostForm) {
+    postmod.unload()
+    this.postmods[postmod.post.key] = new PostShow(this.ctx, el, {post: postmod.post})
+  } else {
+    postmod.updateFav() // update just fav flag for now.
+  }
 }
 
 User.prototype.removePost = function(postmod) {

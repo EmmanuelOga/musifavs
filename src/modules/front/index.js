@@ -5,7 +5,6 @@ function Front(ctx, node, options) {
   this.ctx = ctx
   this.node = node
   this.node.innerHTML = template(options)
-  this.node.classList.add('app-front')
 
   this.ndlastest = this.node.querySelector('.lastest-posts')
   this.ndfavs = this.node.querySelector('.lastest-favs')
@@ -18,7 +17,6 @@ function Front(ctx, node, options) {
 }
 
 Front.prototype.unload = function() {
-  this.node.classList.remove('app-front')
   this.node.innerHTML = ''
   this.ctx.destroy()
 }

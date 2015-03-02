@@ -45,6 +45,10 @@ require('riot').observable(Post)
 Post.attributes = ['date', 'title', 'desc', 'embed', 'favorited', 'uid', 'userName', 'key']
 Post.defaults = {title: '', desc: '', embed: {}, favorited: false, stored: false}
 
+Post.prototype.toggleFav = function() {
+  this.favorited = !this.favorited
+}
+
 Post.prototype.unstored = function(other) {
   return isEmpty(this.key)
 }
