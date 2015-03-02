@@ -14,6 +14,9 @@ function User(ctx, node, options) {
 
   merge(this, options)
 
+  // fb path will be displaying (can be either favorites or all posts)
+  this.collection = 'user_' + this.action + '/' + this.user.uid
+
   this.node = node
   this.node.innerHTML = maintpl(this)
 
@@ -24,7 +27,7 @@ function User(ctx, node, options) {
   this.ndposts = qs('.app-posts')
   this.ndprof = qs('.profile')
 
-  this.showPlaceholder()
+  this.updatePlaceholder()
 
   on = function(name, cbk) {
     ctx.on(name, cbk.bind(this))
@@ -37,13 +40,13 @@ function User(ctx, node, options) {
   })
 
   on('store:users:did:lookup', function(uid, user) {
-    this.ctx.trigger('store:posts:do:retrieve', uid)
+    this.ctx.trigger('store:posts:do:retrieve', this.collection)
     this.user = user
     this.redrawProfile()
   })
 
-  on('store:posts:did:retrieve', function(post){
-    this.hidePlaceholder()
+  on('store:posts:did:retrieve', function(collection, post){
+    this.updatePlaceholder()
     this.addPost(post)
   })
 
@@ -117,13 +120,14 @@ function User(ctx, node, options) {
   this.node.addEventListener('click', this.postslistener)
 }
 
-User.prototype.hidePlaceholder = function() {
-  this.ndplacehold.classList.add('app-hidden')
-}
+User.prototype.updatePlaceholder = function() {
+  var mods = Object.keys(this.postmods).length,
+     showingnew = this.postmods['new']
 
-User.prototype.showPlaceholder = function() {
-  if (Object.keys(this.postmods).length == 0) {
+  if (mods == 0 || (mods == 1 && showingnew)) {
     this.ndplacehold.classList.remove('app-hidden')
+  } else {
+    this.ndplacehold.classList.add('app-hidden')
   }
 }
 
@@ -132,9 +136,8 @@ User.prototype.redrawProfile = function() {
 }
 
 User.prototype.showNewPost = function() {
-  console.log('should show')
   if (!this.postmods['new']) {
-    this.hidePlaceholder()
+    this.updatePlaceholder()
     var el = document.createElement('div')
     this.postmods['new'] = new PostForm(this.ctx, el, {post: new Post({uid: this.uid, userName: this.user.displayName})})
     this.ndnewpost.appendChild(el)
@@ -142,14 +145,13 @@ User.prototype.showNewPost = function() {
 }
 
 User.prototype.hideNewPost = function() {
-  console.log('should hide')
   var postmod = this.postmods['new']
   if (postmod) {
     postmod.unload()
     this.ndnewpost.removeChild(postmod.node)
     delete this.postmods['new']
   }
-  this.showPlaceholder()
+  this.updatePlaceholder()
 }
 
 User.prototype.addPost = function(post) {
@@ -181,18 +183,13 @@ User.prototype.removePost = function(postmod) {
   postmod.unload()
   this.ndposts.removeChild(postmod.node)
   delete this.postmods[postmod.key]
-  this.showPlaceholder()
+  this.updatePlaceholder()
 }
 
 User.prototype.unload = function() {
-  console.log('unloading user')
   this.node.removeEventListener('click', this.postslistener)
   this.node.innerHTML = ''
-
-  if (this.user) {
-    this.ctx.trigger('store:posts:do:stopretrieve', this.user.uid)
-  }
-
+  this.ctx.trigger('store:posts:do:stopretrieve', this.collection)
   this.ctx.destroy()
 }
 

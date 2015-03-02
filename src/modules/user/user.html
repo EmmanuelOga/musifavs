@@ -6,7 +6,9 @@
   <div class='app-post-placeholder'>
     <h1>Hey!&nbsp;<i class='fa fa-child'></i>&nbsp;<i class='fa fa-play'></i></h1>
     <p>
-      This user has not posted anything yet. Please check back later!
+      This user has not
+      <%= (action == 'posts') ? ' posted anything ' : ' favorited any post ' %>
+      yet. Please check back later!
     </p>
   </div>
 

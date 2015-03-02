@@ -9,10 +9,16 @@ function Front(ctx, node, options) {
   this.ndlastest = this.node.querySelector('.lastest-posts')
   this.ndfavs = this.node.querySelector('.lastest-favs')
 
-  this.ctx.trigger('store:posts:do:lastest')
+  var target = {
+    'posts' : this.ndlastest,
+    'favorited' : this.ndfavs
+  }
 
-  this.ctx.on('store:posts:did:lastest', function(posts) {
-    this.ndlastest.innerHTML = itemstpl({posts: posts})
+  this.ctx.trigger('store:posts:do:lastest', 'posts')
+  this.ctx.trigger('store:posts:do:lastest', 'favorited')
+
+  this.ctx.on('store:posts:did:lastest', function(collection, posts) {
+    target[collection].innerHTML = itemstpl({posts: posts})
   }.bind(this))
 }
 

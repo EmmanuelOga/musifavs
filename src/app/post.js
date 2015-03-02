@@ -144,31 +144,38 @@ Post.on('store:posts:do:destroy', function(post) {
 
 // when called, store:posts:did:retrieve events will be triggered
 // after firebase child_added events.
-Post.on('store:posts:do:retrieve', function retrieve(uid) {
+Post.on('store:posts:do:retrieve', function retrieve(collection) {
   var ref, p
 
-  if (!listeners[uid]) {
+  if (!listeners[collection]) {
     // TODO: we *could* listen to child_changed too...
     // but let's keep it simple for now.
-    ref = fbref.child('user_posts/' + uid).orderByPriority()
+    ref = fbref.child(collection).orderByPriority()
 
-    listeners[uid] = ref.on('child_added', function(snapshot) {
+    listeners[collection] = ref.on('child_added', function(snapshot) {
       p = new Post(snapshot.val(), snapshot.key())
-      Post.trigger('store:posts:did:retrieve', p)
+      Post.trigger('store:posts:did:retrieve', collection, p)
     })
   }
 })
 
-Post.on('store:posts:do:stopretrieve', function stopretrieve(uid) {
-  if (listeners[uid]) {
-    fbref.off('child_added', listeners[uid])
-    delete listeners[uid]
-    Post.trigger('store:posts:did:stopretrieve', uid)
+Post.on('store:posts:do:stopretrieve', function stopretrieve(collection) {
+  if (listeners[collection]) {
+    fbref.off('child_added', listeners[collection])
+    delete listeners[collection]
+    Post.trigger('store:posts:did:stopretrieve', collection)
   }
 })
 
-Post.on('store:posts:do:lastest', function() {
-  var ref = fbref.child('posts').orderByPriority().limitToFirst(10)
+/*
+ * Returns lastest 10 items from one of these collections:
+ * posts
+ * favorited
+ * user_favorites/uid
+ * user_posts/uid
+ */
+Post.on('store:posts:do:lastest', function(collection) {
+  var ref = fbref.child(collection).orderByPriority().limitToFirst(10)
 
   ref.once('value', function(snapshot) {
     var data = snapshot.val()
@@ -180,7 +187,7 @@ Post.on('store:posts:do:lastest', function() {
       return post2.date - post1.date
     })
 
-    Post.trigger('store:posts:did:lastest', lastest)
+    Post.trigger('store:posts:did:lastest', collection, lastest)
   })
 })
 
@@ -200,12 +207,6 @@ Post.on('store:posts:do:persist', function persist(post) {
   }.bind(this))
 })
 
-// Also store the post in the latest posts ref.
-Post.on('store:posts:did:persist', function persist(post) {
-  var attrs = merge(post.getattr(), {date: post.date.valueOf()})
-  fbref.child('posts/' + post.key).set(attrs)
-})
-
 Post.on('store:posts:do:update', function update(post) {
   if (!post.key) {
     Post.trigger('store:posts:failed:update', post, 'a post needs to be persisted before being updatable')
@@ -219,5 +220,25 @@ Post.on('store:posts:do:update', function update(post) {
     }
   })
 })
+
+// Keep a tally of latest posts and lastest favorited.
+function favsAndLastestUpdater(post) {
+  var attrs = merge(post.getattr(), {date: post.date.valueOf()})
+  fbref.child('posts/' + post.key).set(attrs)
+
+  var favkey = 'favorited/' + post.key,
+    userfavkey = 'user_favorites/' + post.uid + '/' + post.key
+
+  if (post.favorited) {
+    fbref.child(favkey).set(attrs)
+    fbref.child(userfavkey).set(attrs)
+  } else {
+    fbref.child(favkey).remove()
+    fbref.child(userfavkey).remove()
+  }
+}
+
+Post.on('store:posts:did:persist', favsAndLastestUpdater)
+Post.on('store:posts:did:update', favsAndLastestUpdater)
 
 module.exports = Post

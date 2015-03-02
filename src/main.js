@@ -37,8 +37,6 @@ function loadmod(module, options) {
     lastmod.unload()
   }
 
-  console.log('displaying ' + module)
-
   var Ctor = require('./modules/' + module),
     // A dispatcher is a pub/sub object to trigger and listen to events.  A
     // dispatcher context can be destroyed, getting rid of all registered
@@ -92,10 +90,9 @@ function route(_uid, action, postid) {
   case 'logout':
 
     if (user.logged) {
-      console.log('logging out')
       dispatcher.trigger('store:users:do:logout')
     } else {
-      // window.location.hash = ''
+      window.location.hash = ''
     }
 
     break

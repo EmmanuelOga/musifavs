@@ -13,15 +13,16 @@
 
 .profile {
   order: 1;
-  min-width: 384px;
+  min-width: 256px;
 }
 
 .profile-info {
-  background-color: #e9e9e9;
-  display: table;
   margin: 0.5em;
   padding: 0.5em;
-  box-shadow: 5px 5px 5px #ddd;
+
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+  box-shadow: 5px 5px 5px #aaa;
 
   ul {
     line-height: 1.5em;
