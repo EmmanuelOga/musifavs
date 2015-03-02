@@ -61,10 +61,6 @@ function User(ctx, node, options) {
     this.showNewPost()
   })
 
-  on('store:posts:did:persist', function(){
-    this.hideNewPost()
-  })
-
   // Clicks handler
   this.postslistener = (function(ev) {
     var n = ev.target
@@ -145,6 +141,7 @@ User.prototype.redrawProfile = function() {
 }
 
 User.prototype.showNewPost = function() {
+  console.log('should show')
   if (!this.postmods['new']) {
     this.hidePlaceholder()
     var el = document.createElement('div')
@@ -154,6 +151,7 @@ User.prototype.showNewPost = function() {
 }
 
 User.prototype.hideNewPost = function() {
+  console.log('should hide')
   var postmod = this.postmods['new']
   if (postmod) {
     postmod.unload()

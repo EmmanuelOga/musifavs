@@ -163,6 +163,23 @@ Post.on('store:posts:do:stopretrieve', function stopretrieve(uid) {
   }
 })
 
+Post.on('store:posts:do:lastest', function() {
+  var ref = fbref.child('posts').orderByPriority().limitToFirst(10)
+
+  ref.once('value', function(snapshot) {
+    var data = snapshot.val()
+
+    var lastest = Object.keys(data).reduce(function(acc, key) {
+      acc.push(new Post(data[key], key))
+      return acc
+    }, []).sort(function(post1, post2) {
+      return post2.date - post1.date
+    })
+
+    Post.trigger('store:posts:did:lastest', lastest)
+  })
+})
+
 // Initial creation of post. Trigger store:posts:do:update instead if the post already exists.
 Post.on('store:posts:do:persist', function persist(post) {
   var date = new Date()
@@ -181,7 +198,8 @@ Post.on('store:posts:do:persist', function persist(post) {
 
 // Also store the post in the latest posts ref.
 Post.on('store:posts:did:persist', function persist(post) {
-  fbref.child('posts/' + post.key).set(post.getattr())
+  var attrs = merge(post.getattr(), {date: post.date.valueOf()})
+  fbref.child('posts/' + post.key).set(attrs)
 })
 
 Post.on('store:posts:do:update', function update(post) {
