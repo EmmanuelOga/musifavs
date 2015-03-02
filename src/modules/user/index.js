@@ -1,10 +1,13 @@
 var maintpl = require('./user.html'),
     proftpl = require('./profile.html'),
-    merge = require('lodash/object/merge'),
-    reject = require('lodash/collection/reject'),
-    Post = require('../../app/post'),
+
     PostShow = require('../post/show'),
-    PostForm = require('../post/form')
+    PostForm = require('../post/form'),
+
+    Post = require('../../app/post'),
+
+    merge = require('lodash/object/merge'),
+    reject = require('lodash/collection/reject')
 
 function User(ctx, node, options) {
   var qs, on
@@ -46,8 +49,8 @@ function User(ctx, node, options) {
   })
 
   on('store:posts:did:retrieve', function(collection, post){
-    this.updatePlaceholder()
     this.addPost(post)
+    this.updatePlaceholder()
   })
 
   on('module:user:do:newpost', function(user) {
@@ -74,7 +77,7 @@ function User(ctx, node, options) {
 
     var classes = n.classList,
       key = n.parentNode.getAttribute('data-post-key'),
-      postmod = this.postmods[key]
+      postmod = key == 'new' ? this.newpostmod : this.postmods[key]
 
     if (classes.contains('fav')) {
       ev.preventDefault()
@@ -121,10 +124,9 @@ function User(ctx, node, options) {
 }
 
 User.prototype.updatePlaceholder = function() {
-  var mods = Object.keys(this.postmods).length,
-     showingnew = this.postmods['new']
+  var mods = Object.keys(this.postmods).length
 
-  if (mods == 0 || (mods == 1 && showingnew)) {
+  if (mods == 0 && !this.newpostmod) {
     this.ndplacehold.classList.remove('app-hidden')
   } else {
     this.ndplacehold.classList.add('app-hidden')
@@ -136,22 +138,21 @@ User.prototype.redrawProfile = function() {
 }
 
 User.prototype.showNewPost = function() {
-  if (!this.postmods['new']) {
-    this.updatePlaceholder()
+  if (!this.newpostmod) {
     var el = document.createElement('div')
-    this.postmods['new'] = new PostForm(this.ctx, el, {post: new Post({uid: this.uid, userName: this.user.displayName})})
+    this.newpostmod = new PostForm(this.ctx, el, {post: new Post({uid: this.uid, userName: this.user.displayName})})
     this.ndnewpost.appendChild(el)
+    this.updatePlaceholder()
   }
 }
 
 User.prototype.hideNewPost = function() {
-  var postmod = this.postmods['new']
-  if (postmod) {
-    postmod.unload()
-    this.ndnewpost.removeChild(postmod.node)
-    delete this.postmods['new']
+  if (this.newpostmod) {
+    this.newpostmod.unload()
+    this.ndnewpost.removeChild(this.newpostmod.node)
+    this.newpostmod = undefined
+    this.updatePlaceholder()
   }
-  this.updatePlaceholder()
 }
 
 User.prototype.addPost = function(post) {

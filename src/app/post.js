@@ -137,6 +137,7 @@ Post.on('store:posts:do:destroy', function(post) {
       // also remove from all posts ref.
       fbref.child('posts/' + post.key).remove()
 
+      post.destroyed = true
       Post.trigger('store:posts:did:destroy', post)
     }
   })
@@ -153,10 +154,15 @@ Post.on('store:posts:do:retrieve', function retrieve(collection) {
     ref = fbref.child(collection).orderByPriority()
 
     listeners[collection] = ref.on('child_added', function(snapshot) {
+
+      console.log(collection, listeners)
       p = new Post(snapshot.val(), snapshot.key())
       Post.trigger('store:posts:did:retrieve', collection, p)
+
     })
   }
+
+  console.log(collection, listeners)
 })
 
 Post.on('store:posts:do:stopretrieve', function stopretrieve(collection) {
@@ -223,16 +229,18 @@ Post.on('store:posts:do:update', function update(post) {
 
 // Keep a tally of latest posts and lastest favorited.
 function favsAndLastestUpdater(post) {
-  var attrs = merge(post.getattr(), {date: post.date.valueOf()})
-  fbref.child('posts/' + post.key).set(attrs)
+  var postskey = 'posts/' + post.key,
+    favkey = 'favorited/' + post.key,
+    userfavkey = 'user_favorites/' + post.uid + '/' + post.key,
+    attrs
 
-  var favkey = 'favorited/' + post.key,
-    userfavkey = 'user_favorites/' + post.uid + '/' + post.key
-
-  if (post.favorited) {
+  if (!post.destroyed && post.favorited) {
+    attrs = merge(post.getattr(), {date: post.date.valueOf()})
+    fbref.child(postskey).set(attrs)
     fbref.child(favkey).set(attrs)
     fbref.child(userfavkey).set(attrs)
   } else {
+    fbref.child(postskey).remove()
     fbref.child(favkey).remove()
     fbref.child(userfavkey).remove()
   }
@@ -240,5 +248,6 @@ function favsAndLastestUpdater(post) {
 
 Post.on('store:posts:did:persist', favsAndLastestUpdater)
 Post.on('store:posts:did:update', favsAndLastestUpdater)
+Post.on('store:posts:did:destroy', favsAndLastestUpdater)
 
 module.exports = Post
