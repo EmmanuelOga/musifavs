@@ -177,10 +177,11 @@ User.prototype.showPost = function(postmod) {
   this.postmods[postmod.post.key] = new PostShow(this.ctx, el, {post: postmod.post})
 }
 
-User.prototype.removePost = function(p) {
-  var p = this.posts[post.key]
-  p.unload()
-  this.ndposts.removeChild(p.node)
+User.prototype.removePost = function(postmod) {
+  this.ctx.trigger('store:posts:do:destroy', postmod.post)
+  postmod.unload()
+  this.ndposts.removeChild(postmod.node)
+  delete this.postmods[postmod.key]
 }
 
 User.prototype.unload = function() {

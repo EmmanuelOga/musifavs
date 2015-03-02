@@ -32,12 +32,6 @@ function User(opts, uid) {
   }
 }
 
-/*
- * Setup "current user" instance.
- */
-User.current = new User()
-
-
 // Extend the User *function* (not the instances) with pub/sub attributes.
 require('riot').observable(User)
 
@@ -59,6 +53,13 @@ User.prototype.toString = function() {
 // Returns only *data* attributes
 User.prototype.getattr = function() {
   return pick(this, User.attributes)
+}
+
+User.prototype.logout = function() {
+  this.logged = false
+  this.authData = null
+  this.uid = null
+  this.provider = 'unknown'
 }
 
 // Updates a user with the provided auth data.
@@ -125,27 +126,24 @@ User.on('store:users:do:lookup', function(uid) {
   })
 })
 
-// Firebase will trigger this callback if authentication changes.
-fbref.onAuth(function authDataCallback(authData) {
-  if (authData) {
-    updateAuth(authData)
-    User.trigger('store:users:did:login', User.current, authData)
-  } else {
-    User.current.logout()
-    User.trigger('store:users:did:logout', User.current)
-  }
-})
+User.setupCurrent = function() {
+  User.current = new User()
 
-User.prototype.logout = function() {
-  this.logged = false
-  this.authData = null
-  this.uid = null
-  this.provider = 'unknown'
+  // Firebase will trigger this callback if authentication changes.
+  fbref.onAuth(function authDataCallback(authData) {
+    if (authData) {
+      updateAuth(authData)
+
+      User.trigger('store:users:did:login', User.current, authData)
+    } else {
+      User.current.logout()
+      User.trigger('store:users:did:logout', User.current)
+    }
+  })
+
+  // Eagerly check auth. state.
+  // NOTE: This could be removed to avoid fb's sync. auth check
+  // updateAuth(fbref.getAuth())
 }
-
-
-// Eagerly check auth. state.
-// NOTE: This could be removed to avoid fb's sync. auth check
-// updateAuth(fbref.getAuth())
 
 module.exports = User

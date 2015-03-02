@@ -176,6 +176,15 @@ Post.on('store:posts:do:persist', function persist(post) {
   }.bind(this))
 })
 
+// Also store the post in the latest posts ref.
+Post.on('store:posts:did:persist', function persist(post) {
+  var r = fbref.child('posts').push(post.getattr(), function(error) {
+    if (error) {
+      // ignore errors here.
+    }
+  }.bind(this))
+})
+
 Post.on('store:posts:do:update', function update(post) {
   if (!post.key) {
     Post.trigger('store:posts:failed:update', post, 'a post needs to be persisted before being updatable')

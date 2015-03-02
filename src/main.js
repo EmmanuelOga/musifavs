@@ -1,13 +1,15 @@
 var riot = require('riot') // router & observer
 
-var Post = require('./app/post', 'Post')
-var User = require('./app/user', 'User')
+var Post = require('./app/post')
+var User = require('./app/user')
 
 var dispatcher = require('./lib/dispatcher')
 
 // Register data stores with dispatcher.
 dispatcher.addStore(Post, 'Post')
 dispatcher.addStore(User, 'User')
+
+User.setupCurrent() // Create instance of current user.
 
 // Modules are small wrappers for inserting html templates into the page.
 
@@ -38,9 +40,9 @@ function loadmod(module, options) {
   console.log('displaying ' + module)
 
   var Ctor = require('./modules/' + module),
-    // A dispatcher is a pub/sub object to trigger and listen to events.
-    // A dispatcher context can be destroyed so all registered events get
-    // destroyed at once.
+    // A dispatcher is a pub/sub object to trigger and listen to events.  A
+    // dispatcher context can be destroyed, getting rid of all registered
+    // events at once.
     dispCtx = dispatcher.context(module),
     mod = new Ctor(dispCtx, main, options)
 
@@ -90,7 +92,7 @@ function route(_uid, action, postid) {
       console.log('logging out')
       dispatcher.trigger('store:users:do:logout')
     } else {
-      window.location.hash = ''
+      // window.location.hash = ''
     }
 
     break
@@ -107,6 +109,14 @@ function route(_uid, action, postid) {
 function message(msg) {
   dispatcher.trigger('module:message:do:show', msg)
 }
+
+dispatcher.on('module:navigation:did:newpost', function(user){
+  if (window.location.hash != 'me/posts') {
+    route('me', 'posts')
+    // now that the route is correct, re trigger the event.
+    dispatcher.trigger('module:navigation:did:newpost')
+  }
+})
 
 dispatcher.on('store:users:did:login', function(user){
   message('Thank you! You have been logged in.')
@@ -128,4 +138,4 @@ dispatcher.on('module:user:failed:mount', function(){
 })
 
 riot.route(route) // Setup route handler for hashchange event.
-riot.route.exec(route) // Call the router w/o waiting for a hashchange.
+riot.route.exec(route) // Call the router w/o waiting for a hashchange (starts the app!)
