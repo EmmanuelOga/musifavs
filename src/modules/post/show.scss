@@ -1,9 +1,13 @@
 .app-post-show {
   display: block;
+
   padding: 1em;
-  box-shadow: 5px 5px 5px #ddd;
+  margin: 0.5em;
+
+  box-shadow: 5px 5px 5px #aaa;
 }
 
-.post-favorited i {
-  color: red;
+.app-post-show .timeago {
+  font-size: small;
+  color: #555;
 }

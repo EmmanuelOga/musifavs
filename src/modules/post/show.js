@@ -8,7 +8,12 @@ function PostShow(ctx, node, options) {
 
   this.node = node
   this.node.classList.add('app-post-show')
-  this.node.innerHTML = template(merge({postKey: this.post.key || 'new', timeago: this.post.timeago()}, this.post))
+
+  this.node.innerHTML = template(merge({
+    postKey: this.post.key || 'new',
+    timeago: this.post.timeago(),
+    displayName: options.displayName
+  }, this.post))
 }
 
 PostShow.prototype.unload = function() {

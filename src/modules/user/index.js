@@ -91,7 +91,9 @@ function User(ctx, node, options) {
 
     } else if (classes.contains('undo')) {
       ev.preventDefault()
+
       if (postmod.post.stored) {
+        this.showPost(postmod)
       } else {
         this.hideNewPost()
       }
@@ -158,7 +160,7 @@ User.prototype.hideNewPost = function() {
 
 User.prototype.addPost = function(post) {
   var el = document.createElement('div')
-  var p = this.postmods[post.key] = new PostShow(this.ctx, el, {post: post})
+  var p = this.postmods[post.key] = new PostShow(this.ctx, el, {post: post, displayName: this.user.displayName})
   this.ndposts.insertBefore(p.node, this.ndposts.firstElementChild)
 }
 
