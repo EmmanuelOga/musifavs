@@ -42,7 +42,7 @@ function Post(opts, key) {
 // Extend the Post function (not the instances) with pub/sub properties.
 require('riot').observable(Post)
 
-Post.attributes = ['date', 'title', 'desc', 'embed', 'favorited']
+Post.attributes = ['date', 'title', 'desc', 'embed', 'favorited', 'uid', 'userName', 'key']
 Post.defaults = {title: '', desc: '', embed: {}, favorited: false, stored: false}
 
 Post.prototype.unstored = function(other) {
@@ -126,10 +126,13 @@ Post.prototype.fbpostref = function() {
 
 // Destroy a Post
 Post.on('store:posts:do:destroy', function(post) {
-  fbref.remove(function(error){
+  post.fbpostref().remove(function(error){
     if (error) {
       Post.trigger('store:posts:failed:destroy', post, error)
     } else {
+      // also remove from all posts ref.
+      fbref.child('posts/' + post.key).remove()
+
       Post.trigger('store:posts:did:destroy', post)
     }
   })
@@ -178,11 +181,7 @@ Post.on('store:posts:do:persist', function persist(post) {
 
 // Also store the post in the latest posts ref.
 Post.on('store:posts:did:persist', function persist(post) {
-  var r = fbref.child('posts').push(post.getattr(), function(error) {
-    if (error) {
-      // ignore errors here.
-    }
-  }.bind(this))
+  fbref.child('posts/' + post.key).set(post.getattr())
 })
 
 Post.on('store:posts:do:update', function update(post) {

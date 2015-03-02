@@ -109,6 +109,7 @@ function User(ctx, node, options) {
         this.ctx.trigger('store:posts:do:update', postmod.post)
       } else {
         this.ctx.trigger('store:posts:do:persist', postmod.post)
+        this.hideNewPost()
       }
 
     } else {
@@ -134,7 +135,9 @@ User.prototype.hidePlaceholder = function() {
 }
 
 User.prototype.showPlaceholder = function() {
-  this.ndplacehold.classList.remove('app-hidden')
+  if (Object.keys(this.postmods).length == 0) {
+    this.ndplacehold.classList.remove('app-hidden')
+  }
 }
 
 User.prototype.redrawProfile = function() {
@@ -143,8 +146,9 @@ User.prototype.redrawProfile = function() {
 
 User.prototype.showNewPost = function() {
   if (!this.postmods['new']) {
+    this.hidePlaceholder()
     var el = document.createElement('div')
-    this.postmods['new'] = new PostForm(this.ctx, el, {post: new Post({uid: this.uid})})
+    this.postmods['new'] = new PostForm(this.ctx, el, {post: new Post({uid: this.uid, userName: this.user.displayName})})
     this.ndnewpost.appendChild(el)
   }
 }
@@ -156,6 +160,7 @@ User.prototype.hideNewPost = function() {
     this.ndnewpost.removeChild(postmod.node)
     delete this.postmods['new']
   }
+  this.showPlaceholder()
 }
 
 User.prototype.addPost = function(post) {
@@ -182,6 +187,7 @@ User.prototype.removePost = function(postmod) {
   postmod.unload()
   this.ndposts.removeChild(postmod.node)
   delete this.postmods[postmod.key]
+  this.showPlaceholder()
 }
 
 User.prototype.unload = function() {
