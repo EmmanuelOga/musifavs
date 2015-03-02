@@ -79,6 +79,9 @@ function route(_uid, action, postid) {
 
     if (uid) {
       loadmod('user', {user: (user.uid == uid ? user : null), uid: uid, action: action})
+      if (postid == 'new') {
+        dispatcher.trigger('module:navigation:did:newpost')
+      }
     } else {
       message('Please login to access your posts.')
       loadmod('login')
@@ -112,9 +115,7 @@ function message(msg) {
 
 dispatcher.on('module:navigation:did:newpost', function(user){
   if (window.location.hash != 'me/posts') {
-    route('me', 'posts')
-    // now that the route is correct, re trigger the event.
-    dispatcher.trigger('module:navigation:did:newpost')
+    window.location.hash = 'me/posts/new'
   }
 })
 
