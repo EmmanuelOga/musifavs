@@ -22,7 +22,6 @@ var navmod = new Navigation(dispatcher.context('Navigation'), document.querySele
 // Required so browserify can find them.
 require('./modules/front')
 require('./modules/login')
-require('./modules/post')
 require('./modules/user')
 
 // App main node to load the modules into.
@@ -73,7 +72,6 @@ function route(_uid, action, postid) {
 
     break
 
-  case 'new':
   case 'posts':
   case 'favorites':
 

@@ -1,0 +1,26 @@
+<div class='profile-info'>
+  <ul class='fa-ul'>
+    <li class='profile-pic'>
+      <img src='<%=user.avatarUrl%>' />
+    </li>
+    <li>
+      <i class='fa-li fa fa-link'></i>
+      <a href='<%=user.url%>'><%=user.displayName%></a><br>
+    </li>
+
+    <li>
+      <i class='fa-li fa fa-user'></i>
+      <%=user.description%>
+    </li>
+
+    <li>
+      <i class='fa-li fa fa-map-marker'></i>
+      <%=user.location%>
+    </li>
+
+    <li>
+      <i class='fa-li fa fa-twitter-square'></i>
+      <a href='https://twitter.com/<%=user.displayName%>'>@<%=user.displayName%></a>
+    </li>
+  </ul>
+</div>

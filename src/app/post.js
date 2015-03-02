@@ -24,14 +24,16 @@
 
 var listeners = {},
     fbref = new Firebase('https://musifavs.firebaseio.com'),
+    timeago = require('../lib/fromnow'),
+    yt = require('../lib/youtube'),
+
+    // lodash stuff.
     defaults = require('lodash/object/defaults'),
-    merge = require('lodash/object/merge'),
-    pick = require('lodash/object/pick'),
-    isString = require('lodash/lang/isString'),
     isDate = require('lodash/lang/isDate'),
     isEmpty = require('lodash/lang/isEmpty'),
-    timeago = require('../lib/fromnow'),
-    yt = require('../lib/youtube')
+    isString = require('lodash/lang/isString'),
+    merge = require('lodash/object/merge'),
+    pick = require('lodash/object/pick')
 
 function Post(opts, key) {
   this.setattr(defaults({}, opts, {key: key}, Post.defaults))
@@ -119,12 +121,12 @@ Post.prototype.fbrootref = function() {
 
 //
 Post.prototype.fbpostref = function() {
-  return this.fbrootref.child('/' + this.key)
+  return this.fbrootref().child('/' + this.key)
 }
 
 // Destroy a Post
 Post.on('store:posts:do:destroy', function(post) {
-  post.fbpostref.remove(function(error){
+  fbref.remove(function(error){
     if (error) {
       Post.trigger('store:posts:failed:destroy', post, error)
     } else {
@@ -161,9 +163,9 @@ Post.on('store:posts:do:stopretrieve', function stopretrieve(uid) {
 // Initial creation of post. Trigger store:posts:do:update instead if the post already exists.
 Post.on('store:posts:do:persist', function persist(post) {
   var date = new Date()
-  var attrs = merge(post.getattr(), {date: date.valueOf(), uid: uid})
+  var attrs = merge(post.getattr(), {date: date.valueOf(), uid: post.uid})
 
-  var r = post.fbrootref.push(attrs, function(error) {
+  var r = post.fbrootref().push(attrs, function(error) {
     if (error) {
       Post.trigger('store:posts:failed:persist', post, error)
     } else {
@@ -179,7 +181,7 @@ Post.on('store:posts:do:update', function update(post) {
     Post.trigger('store:posts:failed:update', post, 'a post needs to be persisted before being updatable')
   }
 
-  post.fbpostref.update(post.getattr(), function(error){
+  post.fbpostref().update(post.getattr(), function(error){
     if (error) {
       Post.trigger('store:posts:failed:update', post, error)
     } else {

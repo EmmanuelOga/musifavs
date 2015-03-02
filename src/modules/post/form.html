@@ -1,0 +1,21 @@
+<h2><%= stored ? 'Editing Post' : 'New Post' %></h2>
+
+<p>
+  Please provide the resource url to share, a title and a description.
+</p>
+
+<div class='post-form-embed'>
+  <label>Embed Url (e.g. YouTube Url)</label>
+  <input name='url' type='url' placeholder='https://www.youtube.com/watch?v=P9J5tYShNY8' />
+</div>
+
+<div class='post-form-data'>
+  <input name='title' title='Post Title' type='text' placeholder='Title' />
+  <textarea title='Post Description' placeholder='Description'></textarea>
+</div>
+
+<div class='post-actions' data-post-key='<%= postKey %>'>
+  <a class='undo' title='Undo' href='#'><i class='fa fa-times-circle'></i>&nbsp;Cancel</a>
+  <a class='save' title='Save and Publish' href='#'><i class='fa fa-save'></i>&nbsp;Save</a>
+  <span class='post-edit-message'></span>
+</div>

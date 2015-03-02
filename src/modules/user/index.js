@@ -1,59 +1,196 @@
-var template = require('./user.html'),
-    merge = require('lodash/object/merge')
+var maintpl = require('./user.html'),
+    proftpl = require('./profile.html'),
+    merge = require('lodash/object/merge'),
+    reject = require('lodash/collection/reject'),
+    Post = require('../../app/post'),
+    PostShow = require('../post/show'),
+    PostForm = require('../post/form')
 
 function User(ctx, node, options) {
-  this.ctx = ctx
+  var qs, on
 
-  this.posts = []
-  this.newPost = null
+  this.ctx = ctx
+  this.postmods = {}
+
+  merge(this, options)
 
   this.node = node
-  this.node.innerHTML = template(options)
+  this.node.innerHTML = maintpl(this)
+
+  qs = this.node.querySelector.bind(this.node)
+
+  this.ndnewpost = qs('.app-new-post')
+  this.ndplacehold = qs('.app-post-placeholder')
+  this.ndposts = qs('.app-posts')
+  this.ndprof = qs('.profile')
+
+  this.showPlaceholder()
+
+  on = function(name, cbk) {
+    ctx.on(name, cbk.bind(this))
+  }.bind(this)
+
+  this.ctx.trigger('store:users:do:lookup', this.uid)
+
+  on('store:users:failed:lookup', function(uid) {
+    this.ctx.trigger('module:user:failed:mount', uid)
+  })
+
+  on('store:users:did:lookup', function(uid, user) {
+    this.ctx.trigger('store:posts:do:retrieve', uid)
+    this.user = user
+    this.redrawProfile()
+  })
+
+  on('store:posts:did:retrieve', function(post){
+    this.hidePlaceholder()
+    this.addPost(post)
+  })
+
+  on('module:user:do:newpost', function(user) {
+    this.showNewPost()
+  })
+
+  on('store:posts:did:update', function(post){
+    var key = post.key,
+      postmod = this.postmods[key]
+    this.showPost(postmod)
+  })
+
+  on('module:navigation:did:newpost', function(){
+    this.showNewPost()
+  })
+
+  on('store:posts:did:persist', function(){
+    this.hideNewPost()
+  })
+
+  // Clicks handler
+  this.postslistener = (function(ev) {
+    var n = ev.target
+
+    if ((/i/i).test(n.tagName)) {
+      n = n.parentNode
+    }
+
+    var classes = n.classList,
+      key = n.parentNode.getAttribute('data-post-key'),
+      postmod = this.postmods[key]
+
+    if (classes.contains('fav')) {
+      ev.preventDefault()
+      this.toggleFav(classes)
+
+    } else if (classes.contains('edit')) {
+      ev.preventDefault()
+      this.editPost(postmod)
+
+    } else if (classes.contains('remove')) {
+      ev.preventDefault()
+      this.removePost(postmod)
+
+    } else if (classes.contains('undo')) {
+      ev.preventDefault()
+      if (postmod.post.stored) {
+      } else {
+        this.hideNewPost()
+      }
+
+    } else if (classes.contains('save')) {
+      ev.preventDefault()
+
+      postmod.updatePost()
+
+      if (!postmod.isValid()) {
+        // do nothing, the form will show an error message.
+      } else if (postmod.post.stored) {
+        this.ctx.trigger('store:posts:do:update', postmod.post)
+      } else {
+        this.ctx.trigger('store:posts:do:persist', postmod.post)
+      }
+
+    } else {
+      // do nothing.
+    }
+  }).bind(this)
+
+  this.node.addEventListener('click', this.postslistener)
+}
+
+User.prototype.toggleFav = function(classes) {
+  classes.toggle('post-favorited')
+
+  if (classes.contains('post-favorited')) {
+    console.log('should trigger fav')
+  } else {
+    console.log('should trigger unfav')
+  }
+}
+
+User.prototype.hidePlaceholder = function() {
+  this.ndplacehold.classList.add('app-hidden')
+}
+
+User.prototype.showPlaceholder = function() {
+  this.ndplacehold.classList.remove('app-hidden')
+}
+
+User.prototype.redrawProfile = function() {
+  this.ndprof.innerHTML = proftpl(this)
+}
+
+User.prototype.showNewPost = function() {
+  if (!this.postmods['new']) {
+    var el = document.createElement('div')
+    this.postmods['new'] = new PostForm(this.ctx, el, {post: new Post({uid: this.uid})})
+    this.ndnewpost.appendChild(el)
+  }
+}
+
+User.prototype.hideNewPost = function() {
+  var postmod = this.postmods['new']
+  if (postmod) {
+    postmod.unload()
+    this.ndnewpost.removeChild(postmod.node)
+    delete this.postmods['new']
+  }
+}
+
+User.prototype.addPost = function(post) {
+  var el = document.createElement('div')
+  var p = this.postmods[post.key] = new PostShow(this.ctx, el, {post: post})
+  this.ndposts.insertBefore(p.node, this.ndposts.firstElementChild)
+}
+
+User.prototype.editPost = function(postmod) {
+  var el = postmod.node
+  postmod.unload()
+  this.postmods[postmod.post.key] = new PostForm(this.ctx, el, {post: postmod.post})
+}
+
+// show a post that was previously bein edited.
+User.prototype.showPost = function(postmod) {
+  var el = postmod.node
+  postmod.unload()
+  this.postmods[postmod.post.key] = new PostShow(this.ctx, el, {post: postmod.post})
+}
+
+User.prototype.removePost = function(p) {
+  var p = this.posts[post.key]
+  p.unload()
+  this.ndposts.removeChild(p.node)
 }
 
 User.prototype.unload = function() {
+  console.log('unloading user')
+  this.node.removeEventListener('click', this.postslistener)
   this.node.innerHTML = ''
+
+  if (this.user) {
+    this.ctx.trigger('store:posts:do:stopretrieve', this.user.uid)
+  }
+
   this.ctx.destroy()
 }
 
 module.exports = User
-
-/*
-
-this.dtr('store:users:do:lookup', opts.uid)
-
-this.don('store:users:failed:lookup', function(uid) {
-  this.dtr('module:user:failed:mount', uid)
-})
-
-this.don('store:users:did:lookup', function(uid, user) {
-  this.dtr('store:posts:do:retrieve', uid)
-  this.update({user: user})
-}.bind(this))
-
-this.don('store:posts:did:retrieve', function(post){
-  this.posts.unshift(post)
-  this.update()
-}.bind(this))
-
-this.don('store:posts:did:destroy', function(post) {
-  var reject = require('lodash/collection/reject')
-  var posts = reject(posts, function(post){ return post.key == key })
-  this.update({posts: posts})
-}.bind(this))
-
-this.don('user:newpost', function(user) {
-  this.update({newPost: new Post()})
-}.bind(this))
-
-this.don('module:user:do:cancelcreatepost', function() {
-  this.update({newPost: null})
-}.bind(this))
-
-this.don('destroy', function(){
-  if (this.user) {
-   this.dtr('store:posts:do:stopretrieve', this.user.uid)
-  }
-})
-
-*/
