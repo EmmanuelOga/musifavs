@@ -1,8 +1,10 @@
 var template = require('./front.html')
-  itemstpl = require('./post-items.html')
+  itemstpl = require('./post-items.html'),
 
-function Front(ctx, node, options) {
-  this.ctx = ctx
+  Post = require('../../app/post')
+
+function Front(events, node, options) {
+  this.events = events
   this.node = node
   this.node.innerHTML = template(options)
 
@@ -14,17 +16,17 @@ function Front(ctx, node, options) {
     'favorited' : this.ndfavs
   }
 
-  this.ctx.trigger('store:posts:do:lastest', 'posts')
-  this.ctx.trigger('store:posts:do:lastest', 'favorited')
+  Post.lastest('posts')
+  Post.lastest('favorited')
 
-  this.ctx.on('store:posts:did:lastest', function(collection, posts) {
+  this.events.on('store:posts:did:lastest', function(collection, posts) {
     target[collection].innerHTML = itemstpl({posts: posts})
-  }.bind(this))
+  })
 }
 
 Front.prototype.unload = function() {
   this.node.innerHTML = ''
-  this.ctx.destroy()
+  this.events.destroy()
 }
 
 module.exports = Front

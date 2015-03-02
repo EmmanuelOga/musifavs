@@ -20,22 +20,19 @@
  * users/uid : { ...user data... }
  */
 
-var fbref = new Firebase('https://musifavs.firebaseio.com'),
-    defaults = require('lodash/object/defaults'),
-    pick = require('lodash/object/pick')
+var defaults = require('lodash/object/defaults'),
+  pick = require('lodash/object/pick')
+
+var fbref = new Firebase('https://musifavs.firebaseio.com')
 
 function User(opts, uid) {
   defaults(this, opts, User.defaults)
 
+  // if current user was instantiated more than once.
   if (User.current && User.current.uid === uid) {
     defaults(this, User.current)
   }
 }
-
-// Extend the User *function* (not the instances) with pub/sub attributes.
-require('riot').observable(User)
-
-User.attributes = ['displayName', 'url', 'description', 'location', 'avatarUrl']
 
 User.defaults = {
   'avatarUrl' : '/assets/profile.png',
@@ -46,9 +43,11 @@ User.defaults = {
   'url' : 'https://musifavs.com'
 }
 
-User.prototype.toString = function() {
-  return JSON.stringify(pick(this.getattr(), ['displayName', 'logged']))
-}
+/*
+ *******************************************************************************
+ * Instance Methods
+ *******************************************************************************
+ */
 
 // Returns only *data* attributes
 User.prototype.getattr = function() {
@@ -56,11 +55,30 @@ User.prototype.getattr = function() {
 }
 
 User.prototype.logout = function() {
-  this.logged = false
   this.authData = null
-  this.uid = null
+  this.logged = false
   this.provider = 'unknown'
+  this.uid = null
 }
+
+// update fb data
+User.prototype.update = function() {
+  if (!this.uid) { return }
+  fbref.child('users').child(this.uid).set(user.getattr())
+}
+
+User.prototype.toString = function() {
+  return JSON.stringify(pick(this.getattr(), ['displayName', 'logged']))
+}
+
+/*
+ *******************************************************************************
+ * "Static" Methods
+ *******************************************************************************
+ */
+
+// Extend the User *function* (not the instances) with pub/sub attributes.
+require('riot').observable(User)
 
 // Updates a user with the provided auth data.
 function updateAuth(authData) {
@@ -73,77 +91,64 @@ function updateAuth(authData) {
   u.provider = authData.provider
   u.logged = true
 
-  if (authData && authData.provider == 'twitter') {
+  if (authData.provider == 'twitter') {
     u.displayName = authData.twitter.displayName
 
     var p = authData.twitter.cachedUserProfile
 
     if (p) {
-      u.url = p.url
+      u.avatarUrl = p.profile_image_url_https
       u.description = p.description
       u.location = p.location
-      u.avatarUrl = p.profile_image_url_https
+      u.url = p.url
     }
-
-    // in case we picked some nulls from twittwer.
-    defaults(this, u.defaults)
   }
 
+  defaults(this, u.defaults) // in case we picked up some nulls
 }
 
-User.on('store:users:do:logout', function() {
-  User.current.logout()
-  fbref.unauth()
-})
-
-User.on('store:users:do:login', function(provider) {
+User.login = function(provider) {
   fbref.authWithOAuthPopup(provider, function(error, authData) {
     if (error || !authData) {
-      User.trigger('store:users:failed:login', error || {code: 'UNKNOWN'})
+      User.trigger('store:users:failed:login', error || {code: 'unknown'})
     } else {
       updateAuth(authData)
     }
   })
-})
+}
 
-User.on('store:users:do:update', function(user) {
-  fbref.child('users').child(user.uid).set(user.getattr(), function(error){
-    if (error) {
-      User.trigger('store:users:failed:update', user, error)
-    } else {
-      User.trigger('store:users:did:update', user)
-    }
-  })
-})
+User.logout = function() {
+  if (User.current && User.current.logged) {
+    User.current.logout()
+    fbref.unauth()
+  }
+}
 
-User.on('store:users:do:lookup', function(uid) {
+User.lookup = function(uid) {
   fbref.child('users').child(uid).once('value', function(snapshot){
-    if (snapshot.val()) {
-      User.trigger('store:users:did:lookup', uid, new User(snapshot.val(), uid))
+    var data = snapshot.val()
+    if (data) {
+      User.trigger('store:users:did:lookup', uid, new User(data, uid))
     } else {
       User.trigger('store:users:failed:lookup', uid)
     }
   })
-})
+}
 
+// creates the User.current instance.
 User.setupCurrent = function() {
   User.current = new User()
 
-  // Firebase will trigger this callback if authentication changes.
-  fbref.onAuth(function authDataCallback(authData) {
+  fbref.onAuth(function(authData) {
     if (authData) {
       updateAuth(authData)
-
       User.trigger('store:users:did:login', User.current, authData)
     } else {
       User.current.logout()
       User.trigger('store:users:did:logout', User.current)
     }
   })
-
-  // Eagerly check auth. state.
-  // NOTE: This could be removed to avoid fb's sync. auth check
-  // updateAuth(fbref.getAuth())
+  // updateAuth(fbref.getAuth()) // NOTE: removed to avoid fb's sync. auth check
 }
 
 module.exports = User

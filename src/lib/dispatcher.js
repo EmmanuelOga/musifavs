@@ -6,9 +6,9 @@ var uniqueId = require('lodash/utility/uniqueId')
  * Inspired by https://github.com/jimsparkman/RiotControl
  *
  * A disp allows for tying together different "stores" (pub/sub APIs).
+ *
  * Events triggered by the dispatcher or any registered store are fanned out to
- * *all* listeners. This way Stores don't have to know each other but different
- * stores can be controlled from the same place.
+ * *all* listeners.
  *
  * EXAMPLE:
  *
@@ -21,10 +21,10 @@ var uniqueId = require('lodash/utility/uniqueId')
  * disp.addStore(News)
  *
  * // Destroy a user
- * disp.trigger('user:do:destroy', user)
+ * User.destroy(user) // -> triggers, say, 'user:did:destroy' event.
  *
  * disp.on('user:did:destroy', function(user) {
- *   News.trigger('user:did:destroy', 'Did you hear? User ' + user + 'was deleted!')
+ *   News.trigger('news:did:report', 'Did you hear? User ' + user + 'was deleted!')
  * })
  *
  */
@@ -34,7 +34,7 @@ function Dispatcher() {
 
   var triggers = []
 
-  function callTriggers() {
+  function trigger() {
     var args = [].slice.call(arguments)
     triggers.forEach(function(t){
       // console.log('\u2022 Triggering ' + t.name + ':' + args.join(', '))
@@ -45,41 +45,39 @@ function Dispatcher() {
   this.addStore = function(store, _name) {
     var name = _name || store.constructor.name
     triggers.push({trigger: store.trigger, name: name})
-    store.trigger = callTriggers
+    store.trigger = trigger
     // console.log('\u2022 Added store: ' + name + '. Now tracking ' + triggers.length)
   }
 
   this.removeStore = function(name) {
-    var b = triggers.length
-    triggers = reject(triggers, function(t) {
-      return t.name === name
-    })
-    var a = triggers.length
-    // console.log('\u2022 Destroying ' + name + '. Deleted ' + (b - a) + ' stores. Now tracking ' + triggers.length)
+    var before = triggers.length
+    triggers = reject(triggers, function(t) { return t.name === name })
+    var after = triggers.length
+    // console.log('\u2022 Destroyed ' + name + '. Deleted ' + (b - a) + ' stores. Now tracking ' + a + ' stores.')
   }
 
   this.addStore(this)
 }
 
-/* A context returns a proxy observer that gets registered as a new store.  The
- * proxy contains an additional 'destroy()' method that unregisters every
- * callback that was previously registered and removes itself from the original
+/* Creates a proxy observer that gets registered as a new store. The proxy
+ * contains an additional 'destroy()' method that unregisters every callback
+ * that was previously registered through it, and removes itself from the
  * dispatcher.
  */
 Dispatcher.prototype.context = function(_name) {
-  var disp = this, proxy = riot.observable()
+  var dispatcher = this, proxy = riot.observable()
 
   proxy.name = (_name || '') + uniqueId('Context')
 
+  dispatcher.addStore(proxy, proxy.name)
+
   proxy.destroy = function() {
     proxy.trigger('destroy')
-    disp.removeStore(proxy.name)
+    dispatcher.removeStore(proxy.name)
     proxy.off('*')
     // cheap fail-fast counter measure :-)
     proxy.trigger = proxy.one = proxy.off = proxy.on = 'destroyed'
   }
-
-  disp.addStore(proxy, proxy.name)
 
   return proxy
 }

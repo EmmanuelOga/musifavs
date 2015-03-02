@@ -1,7 +1,7 @@
 var template = require('./message.html')
 
-function Message(ctx, node, options) {
-  this.ctx = ctx
+function Message(events, node, options) {
+  this.events = events
 
   this.wrap = node
   this.wrap.innerHTML = template(options)
@@ -16,14 +16,14 @@ function Message(ctx, node, options) {
 
   this.dism.addEventListener('click', this.listener)
 
-  this.ctx.on('module:message:do:show', function(msg) { this.show(msg) }.bind(this))
-  this.ctx.on('module:message:do:dismiss', function() { this.dismismisss() }.bind(this))
+  this.events.on('module:message:do:show', function(msg) { this.show(msg) }.bind(this))
+  this.events.on('module:message:do:dismiss', function() { this.dismismisss() }.bind(this))
 
   this.dismiss()
 }
 
 Message.prototype.unload = function() {
-  this.ctx.destroy()
+  this.events.destroy()
   this.dism.removeEventListener('click', this.listener)
   this.wrap.innerHTML = ''
 }

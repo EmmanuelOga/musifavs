@@ -1,8 +1,8 @@
 var template = require('./show.html'),
     merge = require('lodash/object/merge')
 
-function PostShow(ctx, node, options) {
-  this.ctx = ctx
+function PostShow(events, node, options) {
+  this.events = events
 
   this.post = options.post
 

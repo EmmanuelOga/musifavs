@@ -22,35 +22,38 @@
  * user_posts/uid/post_key : { ...post data... }
  */
 
-var listeners = {},
-    fbref = new Firebase('https://musifavs.firebaseio.com'),
-    timeago = require('../lib/fromnow'),
-    yt = require('../lib/youtube'),
+var defaults = require('lodash/object/defaults'),
+  merge = require('lodash/object/merge'),
+  pick = require('lodash/object/pick')
 
-    // lodash stuff.
-    defaults = require('lodash/object/defaults'),
-    isDate = require('lodash/lang/isDate'),
-    isEmpty = require('lodash/lang/isEmpty'),
-    isString = require('lodash/lang/isString'),
-    merge = require('lodash/object/merge'),
-    pick = require('lodash/object/pick')
+var fbref = new Firebase('https://musifavs.firebaseio.com'),
+  timeago = require('../lib/fromnow'),
+  yt = require('../lib/youtube')
 
 function Post(opts, key) {
   this.setattr(defaults({}, opts, {key: key}, Post.defaults))
 }
 
-// Extend the Post function (not the instances) with pub/sub properties.
-require('riot').observable(Post)
+Post.defaults = {
+  date: undefined,
+  desc: '',
+  embed: {},
+  favorited: false,
+  key: null,
+  stored: false,
+  title: '',
+  uid: undefined,
+  userName: undefined
+}
 
-Post.attributes = ['date', 'title', 'desc', 'embed', 'favorited', 'uid', 'userName', 'key']
-Post.defaults = {title: '', desc: '', embed: {}, favorited: false, stored: false}
+/*
+ *******************************************************************************
+ * Instance Methods
+ *******************************************************************************
+ */
 
 Post.prototype.toggleFav = function() {
   this.favorited = !this.favorited
-}
-
-Post.prototype.unstored = function(other) {
-  return isEmpty(this.key)
 }
 
 Post.prototype.equals = function(other) {
@@ -63,30 +66,18 @@ Post.prototype.toString = function() {
 
 // Returns only Post *data* attributes
 Post.prototype.getattr = function() {
-  return pick(this, Post.attributes)
+  return pick(this, Object.keys(Post.defaults))
 }
 
-//
+// Sets attributes and derived/computed attributes
 Post.prototype.setattr = function(opts) {
   merge(this, opts)
 
   this.stored = (this.key !== undefined)
+  this.date = this.date ? new Date(this.date) : new Date()
 
-  if (isString(this.date)) {
-    this.date = new Date(Date.parse(this.date))
-  } else if (! isDate(this.date)) {
-    this.date = this.date ? new Date(this.date) : new Date()
-  }
-
-  if (opts.embed) {
-    // TODO: parse other services (soundcloud, bandcamp, etc.)
-    var videoId = yt.extractVideoIdFromUrl(opts.embed.url)
-
-    if (videoId) {
-      this.embed.type = 'youtube'
-      this.embed.videoId = videoId
-    }
-  }
+  // TODO: parse other services (soundcloud, bandcamp, etc.)
+  this.embed = yt.extractEmbed(this.embed)
 
   return this
 }
@@ -118,60 +109,57 @@ Post.prototype.timeago = function() {
   return timeago(this.date)
 }
 
-//
+// Firebase root of all user posts
 Post.prototype.fbrootref = function() {
   return fbref.child('user_posts/' + this.uid)
 }
 
-//
+// Firebase root of the specific user post
 Post.prototype.fbpostref = function() {
   return this.fbrootref().child('/' + this.key)
 }
 
-// Destroy a Post
-Post.on('store:posts:do:destroy', function(post) {
-  post.fbpostref().remove(function(error){
-    if (error) {
-      Post.trigger('store:posts:failed:destroy', post, error)
-    } else {
-      // also remove from all posts ref.
-      fbref.child('posts/' + post.key).remove()
+/*
+ *******************************************************************************
+ * "Static" Methods
+ *******************************************************************************
+ */
 
+// Extend the Post Function (not the instances) with pub/sub properties.
+require('riot').observable(Post)
+
+Post.destroy = function(post) {
+  post.fbpostref().remove(function(error){
+    if (!error) {
       post.destroyed = true
       Post.trigger('store:posts:did:destroy', post)
     }
   })
 })
 
-// when called, store:posts:did:retrieve events will be triggered
+
+var listeners = {}
+
+// When called, store:posts:did:retrieve events will be triggered
 // after firebase child_added events.
-Post.on('store:posts:do:retrieve', function retrieve(collection) {
-  var ref, p
+Post.retrieve = function retrieve(collection) {
+  if (listeners[collection]) { return }
 
-  if (!listeners[collection]) {
-    // TODO: we *could* listen to child_changed too...
-    // but let's keep it simple for now.
-    ref = fbref.child(collection).orderByPriority()
+  var ref = fbref.child(collection).orderByPriority()
 
-    listeners[collection] = ref.on('child_added', function(snapshot) {
+  listeners[collection] = ref.on('child_added', function(snapshot) {
+    console.log(collection, listeners)
+    var post = new Post(snapshot.val(), snapshot.key())
+    Post.trigger('store:posts:did:retrieve', collection, post)
+  })
+}
 
-      console.log(collection, listeners)
-      p = new Post(snapshot.val(), snapshot.key())
-      Post.trigger('store:posts:did:retrieve', collection, p)
+Post.stopRetrieve = function(collection) {
+  if (!listeners[collection]) { return }
 
-    })
-  }
-
-  console.log(collection, listeners)
-})
-
-Post.on('store:posts:do:stopretrieve', function stopretrieve(collection) {
-  if (listeners[collection]) {
-    fbref.off('child_added', listeners[collection])
-    delete listeners[collection]
-    Post.trigger('store:posts:did:stopretrieve', collection)
-  }
-})
+  fbref.off('child_added', listeners[collection])
+  delete listeners[collection]
+}
 
 /*
  * Returns lastest 10 items from one of these collections:
@@ -180,7 +168,7 @@ Post.on('store:posts:do:stopretrieve', function stopretrieve(collection) {
  * user_favorites/uid
  * user_posts/uid
  */
-Post.on('store:posts:do:lastest', function(collection) {
+Post.lastest = function(collection) {
   var ref = fbref.child(collection).orderByPriority().limitToFirst(10)
 
   ref.once('value', function(snapshot) {
@@ -195,10 +183,10 @@ Post.on('store:posts:do:lastest', function(collection) {
 
     Post.trigger('store:posts:did:lastest', collection, lastest)
   })
-})
+}
 
-// Initial creation of post. Trigger store:posts:do:update instead if the post already exists.
-Post.on('store:posts:do:persist', function persist(post) {
+// Initial creation of a post. Use update instead if the post already exists.
+Post.persist = function persist(post) {
   var date = new Date()
   var attrs = merge(post.getattr(), {date: date.valueOf(), uid: post.uid})
 
@@ -206,18 +194,14 @@ Post.on('store:posts:do:persist', function persist(post) {
     if (error) {
       Post.trigger('store:posts:failed:persist', post, error)
     } else {
-      post.setattr({ key: r.key(), stored: true, date: date})
+      post.setattr({ key: r.key(), date: date})
       Post.trigger('store:posts:did:persist', post)
       r.setPriority(date.valueOf())
     }
-  }.bind(this))
-})
+  })
+}
 
-Post.on('store:posts:do:update', function update(post) {
-  if (!post.key) {
-    Post.trigger('store:posts:failed:update', post, 'a post needs to be persisted before being updatable')
-  }
-
+Post.update = function update(post) {
   post.fbpostref().update(post.getattr(), function(error){
     if (error) {
       Post.trigger('store:posts:failed:update', post, error)
@@ -225,19 +209,18 @@ Post.on('store:posts:do:update', function update(post) {
       Post.trigger('store:posts:did:update', post)
     }
   })
-})
+}
 
-// Keep a tally of latest posts and lastest favorited.
+// Keep a tally of latest posts and lastest favorited / user-favorited.
 function favsAndLastestUpdater(post) {
-  var postskey = 'posts/' + post.key,
-    favkey = 'favorited/' + post.key,
-    userfavkey = 'user_favorites/' + post.uid + '/' + post.key,
-    attrs
+  var favkey = 'favorited/' + post.key,
+    postskey = 'posts/' + post.key,
+    userfavkey = 'user_favorites/' + post.uid + '/' + post.key
 
   if (!post.destroyed && post.favorited) {
-    attrs = merge(post.getattr(), {date: post.date.valueOf()})
-    fbref.child(postskey).set(attrs)
+    var attrs = merge(post.getattr(), {date: post.date.valueOf()})
     fbref.child(favkey).set(attrs)
+    fbref.child(postskey).set(attrs)
     fbref.child(userfavkey).set(attrs)
   } else {
     fbref.child(postskey).remove()

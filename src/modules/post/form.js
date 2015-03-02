@@ -3,8 +3,8 @@ var template = require('./form.html'),
   merge = require('lodash/object/merge'),
   values = require('lodash/object/values')
 
-function PostForm(ctx, node, options) {
-  this.ctx = ctx
+function PostForm(events, node, options) {
+  this.events = events
 
   this.post = new Post(options.post)
   this.parent = options.parent

@@ -4,15 +4,16 @@ var maintpl = require('./user.html'),
     PostShow = require('../post/show'),
     PostForm = require('../post/form'),
 
+    User = require('../../app/user'),
     Post = require('../../app/post'),
 
     merge = require('lodash/object/merge'),
     reject = require('lodash/collection/reject')
 
-function User(ctx, node, options) {
+function User(events, node, options) {
   var qs, on
 
-  this.ctx = ctx
+  this.events = events
   this.postmods = {}
 
   merge(this, options)
@@ -33,19 +34,19 @@ function User(ctx, node, options) {
   this.updatePlaceholder()
 
   on = function(name, cbk) {
-    ctx.on(name, cbk.bind(this))
+    events.on(name, cbk.bind(this))
   }.bind(this)
 
-  this.ctx.trigger('store:users:do:lookup', this.uid)
+  User.('lookup', this.uid)
 
   on('store:users:failed:lookup', function(uid) {
-    this.ctx.trigger('module:user:failed:mount', uid)
+    this.events.trigger('module:user:failed:mount', uid)
   })
 
   on('store:users:did:lookup', function(uid, user) {
-    this.ctx.trigger('store:posts:do:retrieve', this.collection)
     this.user = user
     this.redrawProfile()
+    Post.retrieve(this.collection)
   })
 
   on('store:posts:did:retrieve', function(collection, post){
@@ -82,7 +83,7 @@ function User(ctx, node, options) {
     if (classes.contains('fav')) {
       ev.preventDefault()
       postmod.post.toggleFav()
-      this.ctx.trigger('store:posts:do:update', postmod.post)
+      Post.update(postmod.post)
 
     } else if (classes.contains('edit')) {
       ev.preventDefault()
@@ -109,9 +110,9 @@ function User(ctx, node, options) {
       if (!postmod.isValid()) {
         // do nothing, the form will show an error message.
       } else if (postmod.post.stored) {
-        this.ctx.trigger('store:posts:do:update', postmod.post)
+        Post.update(postmod.post)
       } else {
-        this.ctx.trigger('store:posts:do:persist', postmod.post)
+        Post.persist(postmod.post)
         this.hideNewPost()
       }
 
@@ -140,7 +141,7 @@ User.prototype.redrawProfile = function() {
 User.prototype.showNewPost = function() {
   if (!this.newpostmod) {
     var el = document.createElement('div')
-    this.newpostmod = new PostForm(this.ctx, el, {post: new Post({uid: this.uid, userName: this.user.displayName})})
+    this.newpostmod = new PostForm(this.events, el, {post: new Post({uid: this.uid, userName: this.user.displayName})})
     this.ndnewpost.appendChild(el)
     this.updatePlaceholder()
   }
@@ -157,14 +158,14 @@ User.prototype.hideNewPost = function() {
 
 User.prototype.addPost = function(post) {
   var el = document.createElement('div')
-  var p = this.postmods[post.key] = new PostShow(this.ctx, el, {post: post, displayName: this.user.displayName})
+  var p = this.postmods[post.key] = new PostShow(this.events, el, {post: post, displayName: this.user.displayName})
   this.ndposts.insertBefore(p.node, this.ndposts.firstElementChild)
 }
 
 User.prototype.editPost = function(postmod) {
   var el = postmod.node
   postmod.unload()
-  this.postmods[postmod.post.key] = new PostForm(this.ctx, el, {post: postmod.post})
+  this.postmods[postmod.post.key] = new PostForm(this.events, el, {post: postmod.post})
 }
 
 // show a post that was previously being edited, or update it if the data changed.
@@ -173,14 +174,14 @@ User.prototype.showPost = function(postmod) {
 
   if (postmod instanceof PostForm) {
     postmod.unload()
-    this.postmods[postmod.post.key] = new PostShow(this.ctx, el, {post: postmod.post})
+    this.postmods[postmod.post.key] = new PostShow(this.events, el, {post: postmod.post})
   } else {
     postmod.updateFav() // update just fav flag for now.
   }
 }
 
 User.prototype.removePost = function(postmod) {
-  this.ctx.trigger('store:posts:do:destroy', postmod.post)
+  Post.destroy(postmod.post)
   postmod.unload()
   this.ndposts.removeChild(postmod.node)
   delete this.postmods[postmod.key]
@@ -190,8 +191,8 @@ User.prototype.removePost = function(postmod) {
 User.prototype.unload = function() {
   this.node.removeEventListener('click', this.postslistener)
   this.node.innerHTML = ''
-  this.ctx.trigger('store:posts:do:stopretrieve', this.collection)
-  this.ctx.destroy()
+  Post.stopRetrieve(this.collection)
+  this.events.destroy()
 }
 
 module.exports = User

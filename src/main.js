@@ -62,16 +62,6 @@ function route(_uid, action, postid) {
   }
 
   switch(action) {
-  case 'favorite':
-    if (user.logged) {
-      dispatcher.trigger('store:posts:do:favorite', uid, postid)
-    } else {
-      message('Please login to favorite posts.')
-      loadmod('login')
-    }
-
-    break
-
   case 'posts':
   case 'favorites':
 
@@ -85,18 +75,16 @@ function route(_uid, action, postid) {
       loadmod('login')
     }
 
-    break
-
+  break
   case 'logout':
 
     if (user.logged) {
-      dispatcher.trigger('store:users:do:logout')
+      User.loggout()
     } else {
       window.location.hash = ''
     }
 
-    break
-
+  break
   default:
     loadmod('front')
   }
@@ -118,7 +106,7 @@ dispatcher.on('module:navigation:did:newpost', function(user){
 
 dispatcher.on('store:users:did:login', function(user){
   message('Thank you! You have been logged in.')
-  dispatcher.trigger('store:users:do:update', user)
+  user.update()
 })
 
 dispatcher.on('store:users:did:update', function(user) {

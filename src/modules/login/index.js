@@ -1,7 +1,8 @@
-var template = require('./login.html')
+var template = require('./login.html'),
+    User = require('../../app/user')
 
-function Front(ctx, node, options) {
-  this.ctx = ctx
+function Front(events, node, options) {
+  this.events = events
 
   this.node = node
   this.node.innerHTML = template(options)
@@ -12,9 +13,9 @@ function Front(ctx, node, options) {
     ev.preventDefault()
 
     if (ev.target.id == 'twitter-login') {
-      this.ctx.trigger('store:users:do:login', 'twitter')
+      User.login('twitter')
     } else {
-      this.ctx.trigger('module:message:do:show', 'Sorry, authenticating with this provider is not available yet.')
+      this.events.trigger('module:message:do:show', 'Sorry, authenticating with this provider is not available yet.')
     }
   }.bind(this)
 
@@ -24,7 +25,7 @@ function Front(ctx, node, options) {
 Front.prototype.unload = function() {
   this.list.removeEventListener('click', this.listener)
   this.node.innerHTML = ''
-  this.ctx.destroy()
+  this.events.destroy()
 }
 
 module.exports = Front

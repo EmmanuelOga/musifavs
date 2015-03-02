@@ -1,19 +1,19 @@
 var template = require('./navigation.html')
 
-function Navigation(ctx, node, options) {
+function Navigation(events, node, options) {
   this.wrap = node
   this.wrap.innerHTML = template(options)
 
-  this.ctx = ctx
+  this.events = events
   this.logout = node.querySelector('#nav-logout')
   this.newpost = node.querySelector('#nav-newpost')
 
-  this.ctx.on('module:navigation:do:showlogout', function() { this.showlogout() }.bind(this))
-  this.ctx.on('module:navigation:do:hidelogout', function() { this.hidelogout() }.bind(this))
+  this.events.on('module:navigation:do:showlogout', function() { this.showlogout() }.bind(this))
+  this.events.on('module:navigation:do:hidelogout', function() { this.hidelogout() }.bind(this))
 
   this.newpostlistener = function(ev) {
     ev.preventDefault()
-    this.ctx.trigger('module:navigation:did:newpost')
+    this.events.trigger('module:navigation:did:newpost')
   }.bind(this)
 
   this.newpost.addEventListener('click', this.newpostlistener)
@@ -21,7 +21,7 @@ function Navigation(ctx, node, options) {
 
 Navigation.prototype.unload = function() {
   this.newpost.removeEventListener('click', this.newpostlistener)
-  this.ctx.destroy()
+  this.events.destroy()
   this.wrap.innerHTML = ''
 }
 

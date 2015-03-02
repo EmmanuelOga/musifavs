@@ -31,7 +31,6 @@ Event names follow the pattern: namespace:module:action:event.
 
 E.g., for a persist event:
 
-store:post:do:persist
 store:post:did:persist
 store:post:failed:persist
 
