@@ -24,7 +24,8 @@ var _ = {
   pick     : require('lodash/object/pick')
 }
 
-var fbref = new Firebase('https://musifavs.firebaseio.com'),
+var
+  fbref = new Firebase('https://musifavs.firebaseio.com'),
   timeago = require('../lib/fromnow'),
   yt = require('../lib/youtube')
 
@@ -73,7 +74,7 @@ Post.prototype.setattr = function(opts) {
 
   var p = this
 
-  this.stored = (p.key !== undefined)
+  this.stored = (!!p.key) && (p.key != 'new')
   this.date = p.date ? new Date(p.date) : new Date()
 
   if (p.embed && (!p.embed.type || p.embed.type == 'unknown')) {
@@ -98,7 +99,7 @@ Post.prototype.validation = function() {
     r.isValid = false
   }
 
-  if (!p.embed || !p.embed.type) {
+  if (!p.embed || !p.embed.type || p.embed.type == 'unknown') {
     r.errors.url = 'the embed url is invalid'
     r.isValid = false
   }

@@ -17,7 +17,7 @@ function Message(parent, node, options) {
     this.show(text)
   }.bind(this)
 
-  this.parent.on('module:main:do:message', this.mainDoMessageListener)
+  this.parent.on('module:message:do:message', this.mainDoMessageListener)
 
   this.nodes.dism.on('click', function(target) {
     this.dismiss()

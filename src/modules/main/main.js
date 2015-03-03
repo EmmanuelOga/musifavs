@@ -9,44 +9,54 @@ require('../user/user')
 function Main(rootNode) {
   riot.observable(this) // main can listen to events.
 
-  this.rootNode = rootNode
+  var m = this
 
-  User.on('store:users:did:login', function(user){
-    this.message('Thank you! You have been logged in.')
+  m.rootNode = rootNode
+
+  m.on('module:user:failed:lookup', function(){
+    window.location.hash = '' // "redirect" home.
+    m.message('Sorry, we could not find that user.')
+  })
+
+  m.on('module:navigation:did:newpost', function(user){
+    if (window.location.hash != '#me/posts') {
+      window.location.hash = 'me/posts'
+      m.showNewPost = true
+    } else {
+      m.lastmod.showNewPost()
+    }
+  })
+
+  m.on('module:user:did:lookup', function(uid, user) {
+    if (m.showNewPost) {
+      m.lastmod.showNewPost()
+      m.showNewPost = false
+    }
+  })
+
+  User.on('store:users:did:login', function(user) {
+    m.message('Thank you! You have been logged in.')
     user.update()
-  }.bind(this))
+  })
 
   User.on('store:users:did:update', function(user) {
-    this.router(user.uid, 'posts') // "redirect" to the user posts screen.
-  }.bind(this))
+    m.router(user.uid, 'posts') // "redirect" to the user posts screen.
+  })
 
   User.on('store:users:did:logout', function(){
     window.location.hash = '' // "redirect" home.
-    this.message('You\'ve been logged out.')
-  }.bind(this))
-
-  User.on('module:user:failed:mount', function(){
-    window.location.hash = '' // "redirect" home.
-    this.message('Sorry, we could not find that user.')
-  }.bind(this))
+    m.message('You\'ve been logged out.')
+  })
 }
 
 Main.prototype.message = function(text) {
-  this.trigger('module:main:do:message', text)
+  this.trigger('module:message:do:message', text)
 }
 
-Main.prototype.loadmod = function(modname, options) {
-  if (this.lastmod) { this.lastmod.unload() }
-  var ctor = require('../' + modname + '/' + modname)
-  this.lastmod = new ctor(this, this.rootNode, options)
-}
-
-Main.prototype.newPost = function() {
-  nav.on('module:navigation:did:newpost', function(user){
-    if (window.location.hash != 'me/posts') {
-      window.location.hash = 'me/posts/new'
-    }
-  })
+Main.prototype.loadmod = function(name, options) {
+  var m = this, Ctor = require('../' + name + '/' + name)
+  if (m.lastmod) { m.lastmod.unload() }
+  m.lastmod = new Ctor(m, m.rootNode, options)
 }
 
 /*
@@ -56,7 +66,7 @@ Main.prototype.newPost = function() {
 Main.prototype.router = function(_uid, action, postid) {
   this.trigger('module:main:did:router')
 
-  var user = User.current
+  var m = this, user = User.current
   var uid = (_uid == 'me') ? user.uid : _uid
 
   switch(action) {
@@ -64,19 +74,11 @@ Main.prototype.router = function(_uid, action, postid) {
   case 'favorites':
 
     if (_uid == 'me' && !user.logged) {
-      this.loadmod('login')
-      this.message('Please login to access your posts.')
+      m.loadmod('login')
+      m.message('Please login to access your posts.')
 
     } else {
-      this.loadmod('user', {
-        user: (user.uid == uid ? user : null),
-        uid: uid,
-        action: action
-      })
-
-      if (postid == 'new') {
-        this.lastmod.showNewPost()
-      }
+      m.loadmod('user', {uid: uid, action: action})
     }
 
   break
@@ -90,7 +92,7 @@ Main.prototype.router = function(_uid, action, postid) {
 
   break
   default:
-    this.loadmod('front')
+    m.loadmod('front')
   }
 }
 

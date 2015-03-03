@@ -27,6 +27,11 @@ DomWrap.prototype.prepend = function(node) {
   return this
 }
 
+DomWrap.prototype.append = function(node) {
+  this.node.appendChild(node)
+  return this
+}
+
 DomWrap.prototype.remove = function(node) {
   this.node.removeChild(node)
   return this

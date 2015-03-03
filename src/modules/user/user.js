@@ -14,8 +14,7 @@ function UserMod(parent, node, options) {
 
   this.action = options.action
   this.uid = options.uid
-  this.user = options.user
-  this.firebasepath = 'user_' + this.action + '/' + this.user.uid
+  this.firebasepath = 'user_' + this.action + '/' + this.uid
 
   node.innerHTML = template(this)
 
@@ -29,14 +28,15 @@ function UserMod(parent, node, options) {
     prof      : $(node, '.profile')
   }
 
-  this.userFailedLookup = function (uid) {
-    this.parent.trigger('module:user:failed:mount', uid)
-  }.bind(this)
-
   this.userDidLookup = function(uid, user) {
     this.user = user
     this.redrawProfile()
     Post.retrieve(this.firebasepath)
+    this.parent.trigger('module:user:did:lookup', uid, user)
+  }.bind(this)
+
+  this.userFailedLookup = function (uid) {
+    this.parent.trigger('module:user:failed:lookup', uid)
   }.bind(this)
 
   this.postsDidRetrieve = function(firebasepath, post){
@@ -131,22 +131,20 @@ UserMod.prototype.hideNewPost = function() {
   var m = this.mods.new, n = this.nodes.newpost
   if (m) {
     m.unload()
-    n.remove(m.nodes.root[0])
+    n.html('')
     delete this.mods['new']
     this.updatePlaceholder()
   }
 }
 
 UserMod.prototype.showNewPost = function() {
-  if (!this.mods.new) {
-    var el = document.createElement('div'),
-      p = new Post({
-        uid : this.uid,
-        userName : this.user.displayName
-      })
-    this.mods['new'] = new PostForm(this, el, {post : p})
-    this.nodes.newpost.appendChild(el)
-    this.updatePlaceholder()
+  var m = this, el, p
+  if (!m.mods.new) {
+    el = document.createElement('div')
+    p = new Post({uid : m.uid, userName : m.user.displayName})
+    m.mods['new'] = new PostForm(m, el, {post : p})
+    m.nodes.newpost.append(el)
+    m.updatePlaceholder()
   }
 }
 
@@ -157,25 +155,19 @@ UserMod.prototype.editPost = function(mod) {
 }
 
 UserMod.prototype.addPost = function(post) {
-  var el = document.createElement('div'),
-    p = new PostShow(this, el, {
-      post : post,
-      displayName: this.user.displayName
-    })
-  this.mods[post.key] = p
-  this.nodes.posts.prepend(p.nodes.root[0])
-  this.updatePlaceholder()
+  var m = this, el = document.createElement('div'),
+    p = new PostShow(m, el, {post : post})
+  m.mods[post.key] = p
+  m.nodes.posts.prepend(p.nodes.root[0])
+  m.updatePlaceholder()
 }
 
 // Show a post that was previously being edited, or update it if the data changed.
 UserMod.prototype.showmod = function(mod) {
   if (mod instanceof PostForm) {
     mod.unload()
-    var m = new PostShow(this, mod.nodes.root[0], {
-      post : mod.post,
-      displayName: this.user.displayName
-    })
-    this.mods[mod.post.key] = m
+    var ps = new PostShow(this, mod.nodes.root[0], {post : mod.post})
+    this.mods[mod.post.key] = ps
   } else {
     mod.updateFav() // update just fav flag for now.
   }

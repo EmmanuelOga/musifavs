@@ -1,5 +1,5 @@
 var
-  $        = require('../../lib/domWrap'),
+  $ = require('../../lib/domWrap'),
   template = require('./show.html')
 
 var _ = {
@@ -13,8 +13,7 @@ function PostShow(parent, node, options) {
 
   node.innerHTML = template(_.merge(p.getattr(), {
     postKey: p.key || 'new',
-    timeago: p.timeago(),
-    displayName: options.displayName
+    timeago: p.timeago()
   }))
 
   this.nodes = {
