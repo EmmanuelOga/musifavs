@@ -66,6 +66,10 @@ DomWrap.prototype.parent = function(selector) {
   }
 }
 
+DomWrap.prototype.matches = function(selector) {
+  return this.node.matches(selector)
+}
+
 DomWrap.prototype.data = function(name) {
   return this.node.getAttribute('data-' + name)
 }
@@ -89,24 +93,9 @@ DomWrap.prototype.on = function(eventname, selector, callback) {
   } else {
     fn = function(ev) {
       ev.preventDefault()
-
-      var i, c, t = ev.target,
-          candidates = n.querySelectorAll(selector),
-          length = candidates.length
-
-      while (t) {
-        // Check if the target or one of their parents is equal
-        // to any node matched with the delegate selector.
-        for (i = 0; i < length; i++) {
-          c = candidates[i]
-          if (c.isEqualNode(t)) { return callback(new DomWrap(c), ev) }
-        }
-
-        // No need to check further than the node n (event listener)
-        if (t.isEqualNode(n)) { return }
-
-        t = t.parentElement
-      }
+      var n = new DomWrap(ev.target),
+        r = n.matches(selector) ? n : n.parent(selector)
+      if (r) { callback(r, ev) }
     }
   }
 
