@@ -11,22 +11,16 @@ function PostShow(parent, node, options) {
 
   var p = this.post = options.post
 
-  console.log(p.getattr())
-
   node.innerHTML = template(_.merge(p.getattr(), {
     postKey: p.key || 'new',
     timeago: p.timeago(),
     displayName: options.displayName
   }))
 
-  var r = $(node)
-
   this.nodes = {
-    root: r,
+    root: $(node).addClass('app-post-show'),
     fav: $(node, '.fav')
   }
-
-  r.addClass('app-post-show')
 
   this.updateFav()
 }
@@ -42,7 +36,7 @@ PostShow.prototype.updateFav = function() {
 }
 
 PostShow.prototype.unload = function() {
-  this.node.root.removeClass('app-post-show').html('')
+  this.nodes.root.removeClass('app-post-show').html('')
 }
 
 module.exports = PostShow

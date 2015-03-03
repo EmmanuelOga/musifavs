@@ -150,7 +150,6 @@ Post.retrieve = function retrieve(collection) {
   var ref = fbref.child(collection).orderByPriority()
 
   listeners[collection] = ref.on('child_added', function(snapshot) {
-    console.log(collection, listeners)
     var post = new Post(snapshot.val(), snapshot.key())
     Post.trigger('store:posts:did:retrieve', collection, post)
   })
@@ -164,26 +163,30 @@ Post.stopRetrieve = function(collection) {
 }
 
 /*
- * Returns lastest 10 items from one of these collections:
+ * Returns latest 10 items from one of these collections:
  * posts
  * favorited
  * user_favorites/uid
  * user_posts/uid
  */
-Post.lastest = function(collection) {
-  var ref = fbref.child(collection).orderByPriority().limitToFirst(10)
+Post.latest = function(collection) {
+  var r = fbref.child(collection).orderByPriority().limitToFirst(10)
 
-  ref.once('value', function(snapshot) {
+    console.log(collection)
+
+  r.once('value', function(snapshot) {
     var data = snapshot.val()
 
-    var lastest = Object.keys(data).reduce(function(acc, key) {
+    if (!data) { return } // nothing available?
+
+    var latest = Object.keys(data).reduce(function(acc, key) {
       acc.push(new Post(data[key], key))
       return acc
     }, []).sort(function(post1, post2) {
       return post2.date - post1.date
     })
 
-    Post.trigger('store:posts:did:lastest', collection, lastest)
+    Post.trigger('store:posts:did:latest', collection, latest)
   })
 }
 
@@ -213,7 +216,7 @@ Post.update = function update(post) {
   })
 }
 
-// Keep a tally of latest posts and lastest favorited / user-favorited.
+// Keep a tally of latest posts and latest favorited / user-favorited.
 function favsAndLastestUpdater(post) {
   var
     f = fbref,
@@ -227,11 +230,11 @@ function favsAndLastestUpdater(post) {
     f.child(pst).remove()
     f.child(usf).remove()
   } else {
-    f.child(pst).set(attrs)
+    f.child(pst).set(atr)
 
     if (post.favorited) {
-      f.child(fav).set(attrs)
-      f.child(usf).set(attrs)
+      f.child(fav).set(atr)
+      f.child(usf).set(atr)
     } else {
       f.child(fav).remove()
       f.child(usf).remove()

@@ -1,6 +1,6 @@
 var
-  $        = require('../../lib/domWrap'),
-  User     = require('../../app/user'),
+  $ = require('../../lib/domWrap'),
+  User = require('../../app/user'),
   template = require('./login.html')
 
 function Login(parent, node, options) {

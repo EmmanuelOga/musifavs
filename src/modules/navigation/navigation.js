@@ -1,7 +1,7 @@
 var
-  $        = require('../../lib/domWrap'),
-  User     = require('../../app/user'),
-  riot     = require('riot'),
+  $ = require('../../lib/domWrap'),
+  User = require('../../app/user'),
+  riot = require('riot'),
   template = require('./navigation.html')
 
 function Navigation(parent, node, options) {
@@ -23,8 +23,7 @@ function Navigation(parent, node, options) {
 
   this.parent.on('module:main:did:router', this.updateLogout)
 
-  this.newpostListener = function(ev) {
-    ev.preventDefault()
+  this.newpostListener = function(target) {
     this.trigger('module:navigation:did:newpost')
   }.bind(this)
 

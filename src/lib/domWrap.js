@@ -27,9 +27,19 @@ DomWrap.prototype.prepend = function(node) {
   return this
 }
 
+DomWrap.prototype.remove = function(node) {
+  this.node.removeChild(node)
+  return this
+}
+
 DomWrap.prototype.text = function(text) {
   this.node.textContent = text
   return this
+}
+
+DomWrap.prototype.val = function() {
+  if (arguments.length) { this.node.value = arguments[0] }
+  return this.node.value
 }
 
 DomWrap.prototype.addClass = function(classname) {
@@ -42,6 +52,18 @@ DomWrap.prototype.removeClass = function(classname) {
   return this
 }
 
+// Return first parent element matching selector
+DomWrap.prototype.parent = function(selector) {
+  var t = this.node.parentElement
+  while (t) {
+    if (t.matches(selector)) { return new DomWrap(t) }
+    t = t.parentElement
+  }
+}
+
+DomWrap.prototype.data = function(name) {
+  return this.node.getAttribute('data-' + name)
+}
 
 /* This event handler prevents the event default action
  * and returns a wrapped event target instead in addition
@@ -99,9 +121,11 @@ DomWrap.prototype.off = function(eventname, callback) {
   } else {
     this.listeners.forEach(function(data) {
       this.node.removeEventListener(data.eventname, data.fn)
-    })
+    }, this)
     this.listeners = []
   }
+
+  return this
 }
 
 module.exports = function(node, selector) {

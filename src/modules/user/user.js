@@ -1,10 +1,10 @@
 var
-  $        = require('../../lib/domWrap'),
-  Post     = require('../../app/post'),
-  User     = require('../../app/user'),
+  $ = require('../../lib/domWrap'),
+  Post = require('../../app/post'),
+  User = require('../../app/user'),
   PostForm = require('../post/form'),
   PostShow = require('../post/show'),
-  proftpl  = require('./profile.html'),
+  proftpl = require('./profile.html'),
   template = require('./user.html')
 
 function UserMod(parent, node, options) {
@@ -40,16 +40,18 @@ function UserMod(parent, node, options) {
   }.bind(this)
 
   this.postsDidRetrieve = function(firebasepath, post){
-    this.addPost(post)
+    var u = this, m = this.mods[post.key]
+    if (m) { u.showmod(m) } else { u.addPost(post) }
   }.bind(this)
 
   this.postsDidUpdate = function(post){
-    this.showmod(this.mods[post.key])
+    var u = this, m = this.mods[post.key]
+    if (m) { u.showmod(m) }
   }.bind(this)
 
   var actionMod = function(target) {
     var key = target.parent('.post-actions').data('post-key')
-    var mod = this.mods[key]
+    return this.mods[key]
   }.bind(this)
 
   r.on('click', '.fav', function(target) {
@@ -58,18 +60,17 @@ function UserMod(parent, node, options) {
     Post.update(mod.post)
   }.bind(this))
 
-  r.on('click', '.edit', function() {
+  r.on('click', '.edit', function(target) {
     var mod = actionMod(target)
-    mod.post.toggleFav()
-    Post.update(mod.post)
+    this.editPost(mod)
   }.bind(this))
 
-  r.on('click', '.remove', function() {
+  r.on('click', '.remove', function(target) {
     var mod = actionMod(target)
     this.removePost(mod)
   }.bind(this))
 
-  r.on('click', '.undo', function() {
+  r.on('click', '.undo', function(target) {
     var mod = actionMod(target)
     if (mod.post.stored) {
       this.showmod(mod)
@@ -78,7 +79,7 @@ function UserMod(parent, node, options) {
     }
   }.bind(this))
 
-  r.on('click', '.save', function() {
+  r.on('click', '.save', function(target) {
     var mod = actionMod(target)
 
     mod.updatePost()
@@ -149,9 +150,8 @@ UserMod.prototype.showNewPost = function() {
   }
 }
 
-
 UserMod.prototype.editPost = function(mod) {
-  var el = mod.node
+  var el = mod.nodes.root[0]
   mod.unload()
   this.mods[mod.post.key] = new PostForm(this, el, {post : mod.post})
 }
@@ -171,7 +171,10 @@ UserMod.prototype.addPost = function(post) {
 UserMod.prototype.showmod = function(mod) {
   if (mod instanceof PostForm) {
     mod.unload()
-    var m = new PostShow(this, mod.nodes.root[0], {post : mod.post})
+    var m = new PostShow(this, mod.nodes.root[0], {
+      post : mod.post,
+      displayName: this.user.displayName
+    })
     this.mods[mod.post.key] = m
   } else {
     mod.updateFav() // update just fav flag for now.

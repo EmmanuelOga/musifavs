@@ -15,7 +15,8 @@
 
   "dependencies": {
     "riot": "^2.0.11",
-    "lodash" : "^3.3.1"
+    "lodash" : "^3.3.1",
+    "lodash.escape" : "3.0.0"
   },
 
   "devDependencies": {
@@ -24,15 +25,17 @@
     "rewatch": "^0.4.0",
     "live-server" : "^0.6.4",
     "node-sass" : "^2.0.1",
-    "http-rewrite-middleware" : "^0.1.6"
+    "http-rewrite-middleware" : "^0.1.6",
+    "uglify-js" : "^2.4.16",
+    "autoprefixer" : "^5.1.0"
   },
 
   "scripts": {
     "styles:index"    : "cd src && find -name \\*css | grep -v index.scss | sort -r | sed 's/\\(.\\+\\)/@import \"\\1\";/' > index.scss",
 
-    "debug:build:app" : "browserify src/main.js -t [ jstify --engine lodash ] -d -o debug/main.js",
-    "debug:build:css" : "node-sass src/index.scss --output=debug --source-map debug/index.css.map --source-map-embed",
-    "debug:build:idx" : "cp src/index.html debug/index.html && cp -R -p src/assets debug/assets",
+    "debug:build:app" : "browserify src/main.js -t [ jstify --engine lodash-micro ] -d -o debug/main.js",
+    "debug:build:css" : "node-sass src/index.scss --output-style expanded -o debug/ --source-map debug/index.css.map --source-map-embed",
+    "debug:build:idx" : "cp src/index.html debug/ && cp -R -p src/assets debug/assets",
     "debug:build"     : "npm run debug:build:css & npm run debug:build:app & npm run debug:build:idx",
 
     "debug:watch:css" : "rewatch src/**/*css -c 'npm run debug:build:css'",
@@ -42,6 +45,9 @@
 
     "debug:serve" : "live-server debug",
 
-    "debug" : "npm run debug:watch & npm run debug:serve"
+    "debug" : "npm run debug:watch & npm run debug:serve",
+
+    "release:app" : "browserify src/main.js -t [ jstify --engine lodash-micro ] -d | uglifyjs -c > release/main.js",
+    "release:css" : "node-sass src/index.scss --output-style compressed --source-map release/index.css.map --source-map-embed --stdout | autoprefixer > release/index.css"
   }
 }

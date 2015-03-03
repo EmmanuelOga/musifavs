@@ -4,26 +4,24 @@ var _ = {
 }
 
 var
-  $        = require('../../lib/domWrap'),
-  Post     = require('../../app/post'),
+  $ = require('../../lib/domWrap'),
+  Post = require('../../app/post'),
   template = require('./form.html')
 
 function PostForm(parent, node, options) {
   this.parent = parent
   this.post = new Post(options.post)
 
-  node.innerHTML = template(_.merge({
+  var r = $(node).html(template(_.merge({
     postKey: this.post.key || 'new'
-  }, this.post))
-
-  var r = $(node)
+  }, this.post)))
 
   this.nodes = {
     root: r,
     formMessage: $(node, '.post-edit-message'),
-    inputDesc: $(node, 'textarea'),
     inputTitle: $(node, 'input[name=title]'),
-    inputUrl: $(node, 'input[name=url]')
+    inputUrl: $(node, 'input[name=url]'),
+    inputDesc: $(node, 'textarea')
   }
 
   r.addClass('app-post-form')

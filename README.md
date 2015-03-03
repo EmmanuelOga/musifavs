@@ -24,6 +24,8 @@ Started creating events w/o much structure
 Realized it was getting messy
 Came up with some rules for naming events, listening and triggering.
 
+lodash custom is worth it.
+
 
 Pub/Sub Guidelines:
 

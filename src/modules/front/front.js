@@ -1,6 +1,6 @@
 var
-  $        = require('../../lib/domWrap'),
-  Post     = require('../../app/post'),
+  $ = require('../../lib/domWrap'),
+  Post = require('../../app/post'),
   itemstpl = require('./post-items.html'),
   template = require('./front.html')
 
@@ -11,23 +11,23 @@ function Front(parent, node, options) {
 
   this.nodes = {
     root      : $(node),
-    posts     : $(node, '.lastest-posts'),
-    favorited : $(node, '.lastest-favs')
+    posts     : $(node, '.latest-posts'),
+    favorited : $(node, '.latest-favs')
   }
 
   this.handlePosts = function(collection, posts) {
-    this.nodes[collection].innerHTML = itemstpl({ posts: posts })
+    this.nodes[collection].html(itemstpl({ posts: posts }))
   }.bind(this)
 
-  Post.on('store:posts:did:lastest', this.handlePosts)
+  Post.on('store:posts:did:latest', this.handlePosts)
 
-  Post.lastest('posts')
-  Post.lastest('favorited')
+  Post.latest('posts')
+  Post.latest('favorited')
 }
 
 Front.prototype.unload = function() {
   this.nodes.root.html('')
-  Post.off('store:posts:did:lastest', this.handlePosts)
+  Post.off('store:posts:did:latest', this.handlePosts)
 }
 
 module.exports = Front
