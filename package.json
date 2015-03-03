@@ -38,10 +38,7 @@
     "debug:build:idx" : "cp src/index.html debug/ && cp -R -p src/assets debug/assets",
     "debug:build"     : "npm run debug:build:css & npm run debug:build:app & npm run debug:build:idx",
 
-    "debug:watch:css" : "rewatch src/**/*css -c 'npm run debug:build:css'",
-    "debug:watch:app" : "rewatch src/**/*{js,html} -c 'npm run debug:build:app'",
-    "debug:watch:idx" : "rewatch src/{index.html,assets/*} -c 'npm run debug:build:idx'",
-    "debug:watch"     : "npm run debug:watch:css & npm run debug:watch:app & npm run debug:watch:idx",
+    "debug:watch"     : "rewatch src/**/* -c 'npm run debug:build'",
 
     "debug:serve" : "live-server debug",
 

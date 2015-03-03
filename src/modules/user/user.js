@@ -46,7 +46,9 @@ function UserMod(parent, node, options) {
 
   this.postsDidUpdate = function(post){
     var u = this, m = this.mods[post.key]
-    if (m) { u.showmod(m) }
+    if (m) {
+      u.showmod(m)
+    }
   }.bind(this)
 
   var actionMod = function(target) {
@@ -97,6 +99,7 @@ function UserMod(parent, node, options) {
   User.on('store:users:did:lookup'    , this.userDidLookup)
   Post.on('store:posts:did:retrieve'  , this.postsDidRetrieve)
   Post.on('store:posts:did:update'    , this.postsDidUpdate)
+  Post.on('store:posts:did:togglefav' , this.postsDidUpdate)
 
   User.lookup(this.uid)
 }
@@ -108,6 +111,7 @@ UserMod.prototype.unload = function() {
   User.off('store:users:did:lookup'    , this.userDidLookup)
   Post.off('store:posts:did:retrieve'  , this.postsDidRetrieve)
   Post.off('store:posts:did:update'    , this.postsDidUpdate)
+  Post.off('store:posts:did:togglefav' , this.postsDidUpdate)
 
   Post.stopRetrieve(this.firebasepath)
 }

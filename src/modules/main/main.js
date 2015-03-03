@@ -35,8 +35,9 @@ function Main(rootNode) {
   })
 
   User.on('store:users:did:login', function(user) {
-    m.message('Thank you! You have been logged in.')
     user.update()
+    window.location.hash = '' // "redirect" home.
+    m.message('Thank you! You have been logged in.')
   })
 
   User.on('store:users:did:logout', function(){

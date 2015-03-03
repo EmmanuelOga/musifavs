@@ -21,7 +21,8 @@
 var _ = {
   defaults : require('lodash/object/defaults'),
   merge    : require('lodash/object/merge'),
-  pick     : require('lodash/object/pick')
+  pick     : require('lodash/object/pick'),
+  reject   : require('lodash/collection/reject')
 }
 
 var
@@ -218,14 +219,56 @@ Post.update = function update(post) {
 }
 
 Post.toggleFav = function(post, uid) {
-  var isfav = !post.favers[uid]
-  post.fbpostref('favers').update({uid: isfav}, function(error){
+  var favers = _.merge({}, post.favers) // "clone"
+
+  if (post.favoritedBy(uid)) { // toggle.
+    delete favers[uid]
+  } else {
+    favers[uid] = true
+  }
+
+  post.fbpostref('favers').update(favers, function(error){
     if (error) {
       Post.trigger('store:posts:failed:togglefav', post, error)
     } else {
-      if (!isfav) {
-        fbref.child('user_favorites/' + uid + '/' + post.key).remove()
+      post.favers = favers
+
+      // update the refs for the owner of the post (note use of post.uid instead
+      // of just uid of the user toggling the fav)
+      var
+        upstref = fbref.child('user_posts/' + post.uid + '/' + post.key),
+        ufavref = fbref.child('user_favorites/' + post.uid + '/' + post.key)
+
+      upstref.update(post.getattr())
+
+      if (post.favoritedBy(post.uid)) {
+        ufavref.update(post.getattr())
+      } else {
+        ufavref.remove() // may need to remove if no longer faved
       }
+
+      // update the general list of all favorites
+      var favsref = fbref.child('favorited/' + post.key)
+
+      if (Object.keys(post.favers).length > 0) {
+        favsref.update(post.getattr()) // someone still likes it!
+      } else {
+        favsref.remove() // nobody likes this anymore.
+      }
+
+      // update all other favers (may return empty array)
+      otherUids = _.reject(Object.keys(favers).concat(uid), function(_uid) { return _uid == post.uid })
+
+      otherUids.forEach(function(uid){
+        var otherfav = fbref.child('user_favorites/' + uid + '/' + post.key)
+
+        if (post.favoritedBy(uid)) {
+          otherfav.update(post.getattr())
+        } else {
+          otherfav.remove()
+        }
+      })
+
       Post.trigger('store:posts:did:togglefav', post, uid)
     }
   })
@@ -243,24 +286,12 @@ function updatePostReferences(post) {
   if (post.destroyed) {
     f.child(fav).remove()
     f.child(pst).remove()
-
     favUids.forEach(function(uid){
       f.child('user_favorites/' + uid + '/' + post.key).remove()
     })
   } else {
     f.child(pst).set(atr)
-
-    if (favUids.length) {
-      f.child(fav).set(atr)
-
-      favUids.forEach(function(uid){
-        f.child('user_favorites/' + uid + '/' + post.key).set(atr)
-      })
-    } else {
-      f.child(fav).remove()
-      // if it was 'unfavorited' toggleFav should had removed the
-      // user_favorites ref already.
-    }
+    // fav addition is handled in toggleFav
   }
 }
 
