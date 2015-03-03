@@ -42,6 +42,7 @@ User.defaults = {
   'displayName' : 'user',
   'location'    : 'Universe',
   'logged'      : false,
+  'provider'    : 'unknown',
   'url'         : 'https://musifavs.com'
 }
 
@@ -53,7 +54,7 @@ User.defaults = {
 
 // Returns only *data* attributes
 User.prototype.getattr = function() {
-  return _.pick(this, User.attributes)
+  return _.pick(this, Object.keys(User.defaults))
 }
 
 User.prototype.logout = function() {
@@ -65,8 +66,15 @@ User.prototype.logout = function() {
 
 // update fb data
 User.prototype.update = function() {
-  if (!this.uid) { return }
-  fbref.child('users').child(this.uid).set(user.getattr())
+  var user = this
+  if (!user.uid) { return }
+  fbref.child('users' + '/' + user.uid).set(user.getattr(), function(error) {
+    if (error) {
+      User.trigger('store:users:failed:update', user)
+    } else {
+      User.trigger('store:users:did:update', user)
+    }
+  })
 }
 
 User.prototype.toString = function() {
@@ -104,9 +112,22 @@ function updateAuth(authData) {
       u.location = p.location
       u.url = p.url
     }
+  } else if (authData.provider == 'google') {
+    u.displayName = authData.google.displayName
+
+    var p = authData.google.cachedUserProfile
+
+    if (p) {
+      u.avatarUrl = p.picture
+      u.description = 'G+ User'
+      u.location = 'Planet Earth'
+      u.url = p.link
+    }
   }
 
   _.defaults(this, u.defaults) // in case we picked up some nulls
+
+  u.update()
 }
 
 User.login = function(provider) {

@@ -3,13 +3,14 @@
     <li class='profile-pic'>
       <img src='<%=user.avatarUrl%>' />
     </li>
-    <li>
-      <i class='fa-li fa fa-link'></i>
-      <a href='<%=user.url%>'><%=user.displayName%></a><br>
-    </li>
 
     <li>
       <i class='fa-li fa fa-user'></i>
+      <%=user.displayName%>
+    </li>
+
+    <li>
+      <i class='fa-li fa fa-asterisk'></i>
       <%=user.description%>
     </li>
 
@@ -18,9 +19,19 @@
       <%=user.location%>
     </li>
 
+    <% if (user.provider == 'twitter') { %>
     <li>
       <i class='fa-li fa fa-twitter-square'></i>
       <a href='https://twitter.com/<%=user.displayName%>'>@<%=user.displayName%></a>
     </li>
+    <% } %>
+
+    <% if (user.provider == 'google') { %>
+    <li>
+      <i class='fa-li fa fa-google-plus'></i>
+      <a href='<%=user.url%>'><%=user.displayName%></a><br>
+    </li>
+    <% } %>
+
   </ul>
 </div>

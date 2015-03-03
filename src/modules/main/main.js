@@ -39,10 +39,6 @@ function Main(rootNode) {
     user.update()
   })
 
-  User.on('store:users:did:update', function(user) {
-    m.router(user.uid, 'posts') // "redirect" to the user posts screen.
-  })
-
   User.on('store:users:did:logout', function(){
     window.location.hash = '' // "redirect" home.
     m.message('You\'ve been logged out.')
@@ -84,11 +80,8 @@ Main.prototype.router = function(_uid, action, postid) {
   break
   case 'logout':
 
-    if (user.logged) {
-      User.loggout()
-    } else {
-      window.location.hash = ''
-    }
+    if (user.logged) { user.logout() }
+    window.location.hash = ''
 
   break
   default:

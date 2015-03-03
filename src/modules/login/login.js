@@ -16,6 +16,8 @@ function Login(parent, node, options) {
   this.loginListener = function(target) {
     if (target.id == 'twitter-login') {
       User.login('twitter')
+    } else if (target.id == 'google-login') {
+      User.login('google')
     } else {
       var p = this.parent
       p.message('Sorry, authenticating with this provider is not available yet.')
