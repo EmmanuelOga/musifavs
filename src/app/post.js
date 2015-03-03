@@ -37,7 +37,7 @@ Post.defaults = {
   date: undefined,
   desc: '',
   embed: {},
-  favorited: false,
+  favers: {},
   key: null,
   stored: false,
   title: '',
@@ -50,10 +50,6 @@ Post.defaults = {
  * Instance Methods
  *******************************************************************************
  */
-
-Post.prototype.toggleFav = function() {
-  this.favorited = !this.favorited
-}
 
 Post.prototype.equals = function(other) {
   return this.key === other.key
@@ -112,14 +108,18 @@ Post.prototype.timeago = function() {
   return timeago(this.date)
 }
 
+Post.prototype.favoritedBy = function(uid) {
+  return !!this.favers[uid]
+}
+
 // Firebase root of all user posts
 Post.prototype.fbrootref = function() {
   return fbref.child('user_posts/' + this.uid)
 }
 
 // Firebase root of the specific user post
-Post.prototype.fbpostref = function() {
-  return this.fbrootref().child('/' + this.key)
+Post.prototype.fbpostref = function(postfix) {
+  return this.fbrootref().child('/' + this.key + (postfix ? '/' + postfix : ''))
 }
 
 /*
@@ -217,34 +217,56 @@ Post.update = function update(post) {
   })
 }
 
-// Keep a tally of latest posts and latest favorited / user-favorited.
-function favsAndLastestUpdater(post) {
+Post.toggleFav = function(post, uid) {
+  var isfav = !post.favers[uid]
+  post.fbpostref('favers').update({uid: isfav}, function(error){
+    if (error) {
+      Post.trigger('store:posts:failed:togglefav', post, error)
+    } else {
+      if (!isfav) {
+        fbref.child('user_favorites/' + uid + '/' + post.key).remove()
+      }
+      Post.trigger('store:posts:did:togglefav', post, uid)
+    }
+  })
+}
+
+// update the various post references (like latest posts, favorited, etc.)
+function updatePostReferences(post) {
   var
-    f = fbref,
+    f = fbref, usf,
     pst = 'posts/' + post.key,
     fav = 'favorited/' + post.key,
-    usf = 'user_favorites/' + post.uid + '/' + post.key,
     atr = _.merge(post.getattr(), {date: post.date.valueOf()})
+    favUids = Object.keys(post.favers)
 
   if (post.destroyed) {
     f.child(fav).remove()
     f.child(pst).remove()
-    f.child(usf).remove()
+
+    favUids.forEach(function(uid){
+      f.child('user_favorites/' + uid + '/' + post.key).remove()
+    })
   } else {
     f.child(pst).set(atr)
 
-    if (post.favorited) {
+    if (favUids.length) {
       f.child(fav).set(atr)
-      f.child(usf).set(atr)
+
+      favUids.forEach(function(uid){
+        f.child('user_favorites/' + uid + '/' + post.key).set(atr)
+      })
     } else {
       f.child(fav).remove()
-      f.child(usf).remove()
+      // if it was 'unfavorited' toggleFav should had removed the
+      // user_favorites ref already.
     }
   }
 }
 
-Post.on('store:posts:did:persist', favsAndLastestUpdater)
-Post.on('store:posts:did:update', favsAndLastestUpdater)
-Post.on('store:posts:did:destroy', favsAndLastestUpdater)
+Post.on('store:posts:did:persist', updatePostReferences)
+Post.on('store:posts:did:update', updatePostReferences)
+Post.on('store:posts:did:destroy', updatePostReferences)
+Post.on('store:posts:did:togglefav', updatePostReferences)
 
 module.exports = Post

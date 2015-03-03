@@ -14,6 +14,8 @@
 
 <div class='post-actions' data-post-key='<%= postKey %>'>
   <a class='fav' title='Favorite' href='#'><i class='fa fa-heart'></i>&nbsp;Favorite</a>
+  <% if (owned) { %>
   <a class='edit' title='Edit'     href='#'><i class='fa fa-edit'></i>&nbsp;Edit</a>
   <a class='remove' title='Remove'   href='#'><i class='fa fa-trash'></i>&nbsp;Remove</a>
+  <% } %>
 </div>

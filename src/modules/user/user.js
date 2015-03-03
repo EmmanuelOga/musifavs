@@ -56,8 +56,7 @@ function UserMod(parent, node, options) {
 
   r.on('click', '.fav', function(target) {
     var mod = actionMod(target)
-    mod.post.toggleFav()
-    Post.update(mod.post)
+    Post.toggleFav(mod.post, User.current.uid)
   }.bind(this))
 
   r.on('click', '.edit', function(target) {

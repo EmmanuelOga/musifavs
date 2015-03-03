@@ -1,6 +1,7 @@
 var
   $ = require('../../lib/domWrap'),
-  template = require('./show.html')
+  template = require('./show.html'),
+  User = require('../../app/user')
 
 var _ = {
   merge : require('lodash/object/merge')
@@ -13,7 +14,8 @@ function PostShow(parent, node, options) {
 
   node.innerHTML = template(_.merge(p.getattr(), {
     postKey: p.key || 'new',
-    timeago: p.timeago()
+    timeago: p.timeago(),
+    owned: p.uid == User.current.uid
   }))
 
   this.nodes = {
@@ -27,7 +29,7 @@ function PostShow(parent, node, options) {
 PostShow.prototype.updateFav = function() {
   var p = this.post, f = this.nodes.fav
 
-  if (p.favorited) {
+  if (p.favoritedBy(User.current.uid)) {
     f.addClass('post-favorited')
   } else {
     f.removeClass('post-favorited')
