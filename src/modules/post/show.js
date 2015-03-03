@@ -1,34 +1,48 @@
-var template = require('./show.html'),
-    merge = require('lodash/object/merge')
+var
+  $        = require('../../lib/domWrap'),
+  template = require('./show.html')
 
-function PostShow(events, node, options) {
-  this.events = events
+var _ = {
+  merge : require('lodash/object/merge')
+}
 
-  this.post = options.post
+function PostShow(parent, node, options) {
+  this.parent = parent
 
-  this.node = node
-  this.node.classList.add('app-post-show')
-  this.node.innerHTML = template(merge({
-    postKey: this.post.key || 'new',
-    timeago: this.post.timeago(),
+  var p = this.post = options.post
+
+  console.log(p.getattr())
+
+  node.innerHTML = template(_.merge(p.getattr(), {
+    postKey: p.key || 'new',
+    timeago: p.timeago(),
     displayName: options.displayName
-  }, this.post))
+  }))
 
-  this.ndfav = this.node.querySelector('a.fav')
+  var r = $(node)
+
+  this.nodes = {
+    root: r,
+    fav: $(node, '.fav')
+  }
+
+  r.addClass('app-post-show')
+
   this.updateFav()
 }
 
 PostShow.prototype.updateFav = function() {
-  if (this.post.favorited) {
-    this.ndfav.classList.add('post-favorited')
+  var p = this.post, f = this.nodes.fav
+
+  if (p.favorited) {
+    f.addClass('post-favorited')
   } else {
-    this.ndfav.classList.remove('post-favorited')
+    f.removeClass('post-favorited')
   }
 }
 
 PostShow.prototype.unload = function() {
-  this.node.classList.remove('app-post-show')
-  this.node.innerHTML = ''
+  this.node.root.removeClass('app-post-show').html('')
 }
 
 module.exports = PostShow

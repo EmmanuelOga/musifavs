@@ -2,36 +2,34 @@
  * When first created a Post object is just a holder for Post attributes
  * with some convenience methods for updating attributes, validating, etc.
  *
- * The Post function is also observable. Publishing and subscribing
- * to Post is the only way to interact with the abstract 'posts store'.
- *
  * EXAMPLE:
  *
- * var Post = require('app/post')
+ *     var Post = require('app/post')
  *
- * var post = new Post({ title: 'Some title' })
+ *     var post = new Post({ title: 'Some title' })
  *
- * if (post.validation().isValid()) { Post.trigger('posts:do:persist', post) }
+ *     if (post.validation().isValid()) { Post.persist(post) }
  *
- * Post.on('posts:did:persist', function(post) { console.log('post ' + post + '
- * was successfully created') })
+ * Instead of using callbacks or promises, the Post function is observable:
  *
- * NOTE:
+ *     Post.on('posts:did:persist', function(post) {
+ *       console.log('post ' + post + ' was successfully created')
+ *     })
  *
- * Ultimately the main Firebase path for posts is built like this:
- * user_posts/uid/post_key : { ...post data... }
  */
 
-var defaults = require('lodash/object/defaults'),
-  merge = require('lodash/object/merge'),
-  pick = require('lodash/object/pick')
+var _ = {
+  defaults : require('lodash/object/defaults'),
+  merge    : require('lodash/object/merge'),
+  pick     : require('lodash/object/pick')
+}
 
 var fbref = new Firebase('https://musifavs.firebaseio.com'),
   timeago = require('../lib/fromnow'),
   yt = require('../lib/youtube')
 
 function Post(opts, key) {
-  this.setattr(defaults({}, opts, {key: key}, Post.defaults))
+  this.setattr(_.defaults({}, opts, {key: key}, Post.defaults))
 }
 
 Post.defaults = {
@@ -61,42 +59,46 @@ Post.prototype.equals = function(other) {
 }
 
 Post.prototype.toString = function() {
-  return JSON.stringify(pick(this.getattr(), ['title', 'key']))
+  return JSON.stringify(_.pick(this.getattr(), ['title', 'key']))
 }
 
 // Returns only Post *data* attributes
 Post.prototype.getattr = function() {
-  return pick(this, Object.keys(Post.defaults))
+  return _.pick(this, Object.keys(Post.defaults))
 }
 
 // Sets attributes and derived/computed attributes
 Post.prototype.setattr = function(opts) {
-  merge(this, opts)
+  _.merge(this, opts)
 
-  this.stored = (this.key !== undefined)
-  this.date = this.date ? new Date(this.date) : new Date()
+  var p = this
 
-  // TODO: parse other services (soundcloud, bandcamp, etc.)
-  this.embed = yt.extractEmbed(this.embed)
+  this.stored = (p.key !== undefined)
+  this.date = p.date ? new Date(p.date) : new Date()
+
+  if (p.embed && (!p.embed.type || p.embed.type == 'unknown')) {
+    // TODO: parse other services (soundcloud, bandcamp, etc.)
+    this.embed = yt.extractEmbed(p.embed.url)
+  }
 
   return this
 }
 
 // returns an object with validation results
 Post.prototype.validation = function() {
-  var r = { errors: [], isValid: true }
+  var p = this, r = { errors: [], isValid: true }
 
-  if (!this.date instanceof Date) {
+  if (!p.date instanceof Date) {
     r.errors.date = 'date is invalid'
     r.isValid = false
   }
 
-  if (!this.title || this.title.length == 0) {
+  if (!p.title || p.title.length == 0) {
     r.errors.title = 'title can\'t be blank'
     r.isValid = false
   }
 
-  if (!this.embed || !this.embed.type) {
+  if (!p.embed || !p.embed.type) {
     r.errors.url = 'the embed url is invalid'
     r.isValid = false
   }
@@ -135,7 +137,7 @@ Post.destroy = function(post) {
       Post.trigger('store:posts:did:destroy', post)
     }
   })
-})
+}
 
 
 var listeners = {}
@@ -188,7 +190,7 @@ Post.lastest = function(collection) {
 // Initial creation of a post. Use update instead if the post already exists.
 Post.persist = function persist(post) {
   var date = new Date()
-  var attrs = merge(post.getattr(), {date: date.valueOf(), uid: post.uid})
+  var attrs = _.merge(post.getattr(), {date: date.valueOf(), uid: post.uid})
 
   var r = post.fbrootref().push(attrs, function(error) {
     if (error) {
@@ -213,19 +215,27 @@ Post.update = function update(post) {
 
 // Keep a tally of latest posts and lastest favorited / user-favorited.
 function favsAndLastestUpdater(post) {
-  var favkey = 'favorited/' + post.key,
-    postskey = 'posts/' + post.key,
-    userfavkey = 'user_favorites/' + post.uid + '/' + post.key
+  var
+    f = fbref,
+    pst = 'posts/' + post.key,
+    fav = 'favorited/' + post.key,
+    usf = 'user_favorites/' + post.uid + '/' + post.key,
+    atr = _.merge(post.getattr(), {date: post.date.valueOf()})
 
-  if (!post.destroyed && post.favorited) {
-    var attrs = merge(post.getattr(), {date: post.date.valueOf()})
-    fbref.child(favkey).set(attrs)
-    fbref.child(postskey).set(attrs)
-    fbref.child(userfavkey).set(attrs)
+  if (post.destroyed) {
+    f.child(fav).remove()
+    f.child(pst).remove()
+    f.child(usf).remove()
   } else {
-    fbref.child(postskey).remove()
-    fbref.child(favkey).remove()
-    fbref.child(userfavkey).remove()
+    f.child(pst).set(attrs)
+
+    if (post.favorited) {
+      f.child(fav).set(attrs)
+      f.child(usf).set(attrs)
+    } else {
+      f.child(fav).remove()
+      f.child(usf).remove()
+    }
   }
 }
 

@@ -20,27 +20,29 @@
  * users/uid : { ...user data... }
  */
 
-var defaults = require('lodash/object/defaults'),
-  pick = require('lodash/object/pick')
+var _ = {
+  defaults : require('lodash/object/defaults'),
+  pick     : require('lodash/object/pick')
+}
 
 var fbref = new Firebase('https://musifavs.firebaseio.com')
 
 function User(opts, uid) {
-  defaults(this, opts, User.defaults)
+  _.defaults(this, opts, User.defaults)
 
   // if current user was instantiated more than once.
   if (User.current && User.current.uid === uid) {
-    defaults(this, User.current)
+    _.defaults(this, User.current)
   }
 }
 
 User.defaults = {
-  'avatarUrl' : '/assets/profile.png',
+  'avatarUrl'   : '/assets/profile.png',
   'description' : 'MusiFavs! user',
   'displayName' : 'user',
-  'location' : 'Universe',
-  'logged' : false,
-  'url' : 'https://musifavs.com'
+  'location'    : 'Universe',
+  'logged'      : false,
+  'url'         : 'https://musifavs.com'
 }
 
 /*
@@ -51,7 +53,7 @@ User.defaults = {
 
 // Returns only *data* attributes
 User.prototype.getattr = function() {
-  return pick(this, User.attributes)
+  return _.pick(this, User.attributes)
 }
 
 User.prototype.logout = function() {
@@ -68,7 +70,7 @@ User.prototype.update = function() {
 }
 
 User.prototype.toString = function() {
-  return JSON.stringify(pick(this.getattr(), ['displayName', 'logged']))
+  return JSON.stringify(_.pick(this.getattr(), ['displayName', 'logged']))
 }
 
 /*
@@ -104,7 +106,7 @@ function updateAuth(authData) {
     }
   }
 
-  defaults(this, u.defaults) // in case we picked up some nulls
+  _.defaults(this, u.defaults) // in case we picked up some nulls
 }
 
 User.login = function(provider) {
