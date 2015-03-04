@@ -5,21 +5,21 @@ var
   template = require('./front.html')
 
 function Front(parent, node, options) {
-  node.innerHTML = template(options)
-
   this.parent = parent
 
+  var f = this, r = $(node).html(template(options))
+
   this.nodes = {
-    root      : $(node),
+    root      : r,
     posts     : $(node, '.latest-posts'),
     favorited : $(node, '.latest-favs')
   }
 
-  this.handlePosts = function(collection, posts) {
-    this.nodes[collection].html(itemstpl({ posts: posts }))
-  }.bind(this)
+  f.handlePosts = function(collection, posts) {
+    f.nodes[collection].html(itemstpl({ posts: posts }))
+  }
 
-  Post.on('store:posts:did:latest', this.handlePosts)
+  Post.on('store:posts:did:latest', f.handlePosts)
 
   Post.latest('posts')
   Post.latest('favorited')

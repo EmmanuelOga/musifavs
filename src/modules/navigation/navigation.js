@@ -5,14 +5,12 @@ var
   template = require('./navigation.html')
 
 function Navigation(parent, node, options) {
-  node.innerHTML = template(options)
+  this.parent = parent
 
-  var n = this
-
-  n.parent = parent
+  var n = this, r = $(node).html(template(options))
 
   n.nodes = {
-    root    : $(node),
+    root    : r,
     logout  : $(node, '#nav-logout'),
     newpost : $(node, '#nav-newpost')
   }

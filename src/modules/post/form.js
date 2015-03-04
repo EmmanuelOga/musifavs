@@ -10,11 +10,11 @@ var
 
 function PostForm(parent, node, options) {
   this.parent = parent
+
   this.post = new Post(options.post)
 
-  var r = $(node).html(template(_.merge({
-    postKey: this.post.key || 'new'
-  }, this.post)))
+  var attr = _.merge({ postKey: this.post.key || 'new'}, this.post),
+      r = $(node).html(template(attr)).addClass('app-post-form')
 
   this.nodes = {
     root: r,
@@ -23,8 +23,6 @@ function PostForm(parent, node, options) {
     inputUrl: $(node, 'input[name=url]'),
     inputDesc: $(node, 'textarea')
   }
-
-  r.addClass('app-post-form')
 
   this.updateForm()
 }

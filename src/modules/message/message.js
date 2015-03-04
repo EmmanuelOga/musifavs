@@ -3,25 +3,23 @@ var
   template = require('./message.html')
 
 function Message(parent, node, options) {
-  node.innerHTML = template(options)
-
   this.parent = parent
 
-  this.nodes = {
-    root : $(node),
+  var m = this
+
+  m.nodes = {
+    root : $(node).html(template(options)),
     text : $(node, '.app-message-text'),
     dism : $(node, '.app-message-dismiss')
   }
 
-  this.mainDoMessageListener = function(text){
-    this.show(text)
+  m.mainDoMessageListener = function(text){
+    m.show(text)
   }.bind(this)
 
-  this.parent.on('module:message:do:message', this.mainDoMessageListener)
+  m.parent.on('module:message:do:message', m.mainDoMessageListener)
 
-  this.nodes.dism.on('click', function(target) {
-    this.dismiss()
-  }.bind(this))
+  m.nodes.dism.on('click', function(target) { m.dismiss() })
 }
 
 Message.prototype.unload = function() {

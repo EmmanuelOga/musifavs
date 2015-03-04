@@ -4,27 +4,25 @@ var
   template = require('./login.html')
 
 function Login(parent, node, options) {
-  node.innerHTML = template(options)
-
   this.parent = parent
 
-  this.nodes = {
-    root: $(node),
-    list: $(node, '.login-links')
-  }
+  var l = this, r = $(node).html(template(options))
 
-  this.loginListener = function(target) {
+  l.nodes = { root: r, list: r.select('.login-links') }
+
+  l.loginListener = function(target) {
     if (target.id == 'twitter-login') {
       User.login('twitter')
+
     } else if (target.id == 'google-login') {
       User.login('google')
-    } else {
-      var p = this.parent
-      p.message('Sorry, authenticating with this provider is not available yet.')
-    }
-  }.bind(this)
 
-  this.nodes.list.on('click', this.loginListener)
+    } else {
+      l.parent.message('Sorry, authenticating with this provider is not available yet.')
+    }
+  }
+
+  l.nodes.list.on('click', l.loginListener)
 }
 
 Login.prototype.unload = function() {
