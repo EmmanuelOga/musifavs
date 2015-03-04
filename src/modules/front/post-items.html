@@ -1,14 +1,14 @@
 <% posts.forEach(function(post) { %>
   <li>
-    <i class='fa fa-play'></i>&nbsp;<%= post.title %>
+    <i class='fa fa-play'></i>&nbsp;<%- post.title %>
 
     posted by&nbsp;
 
-    <a href='#<%= post.uid %>/posts'>
-      <%= post.userName %>&nbsp;<i class='fa fa-child'></i>
+    <a href='#<%- post.uid %>/posts'>
+      <%- post.userName %>&nbsp;<i class='fa fa-child'></i>
     </a>
 
     &nbsp;
-    <span class='timeago'>(<%= post.timeago() %>)</span>
+    <span class='timeago'>(<%- post.timeago() %>)</span>
   </li>
 <% }) %>

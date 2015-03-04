@@ -1,18 +1,18 @@
-<p class='timeago'>posted by&nbsp;<%= userName %>&nbsp;<%= timeago %></p>
+<p class='timeago'>posted by&nbsp;<%- userName %>&nbsp;<%- timeago %></p>
 
-<h2><i class='fa fa-play'></i>&nbsp;<%= title %></h2>
+<h2><i class='fa fa-play'></i>&nbsp;<%- title %></h2>
 
 <div class='post-show-embed'>
   <iframe type='text/html' width='640' height='260'
-    src='https://www.youtube.com/embed/<%= embed.videoId %>'
+    src='https://www.youtube.com/embed/<%- embed.videoId %>'
     frameborder='0'></iframe>
 </div>
 
 <p class='post-show-description'>
-  <i class='fa fa-child fa-2x'></i>&nbsp;<%= desc %>
+  <i class='fa fa-child fa-2x'></i>&nbsp;<%- desc %>
 </p>
 
-<div class='post-actions' data-post-key='<%= postKey %>'>
+<div class='post-actions' data-post-key='<%- postKey %>'>
   <a class='fav' title='Favorite' href='#'><i class='fa fa-heart'></i>&nbsp;Favorite</a>
   <% if (owned) { %>
   <a class='edit' title='Edit'     href='#'><i class='fa fa-edit'></i>&nbsp;Edit</a>

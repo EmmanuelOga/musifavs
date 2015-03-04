@@ -35,7 +35,7 @@
     "styles:index"    : "cd src && find -name \\*css | grep -v index.scss | sort -r | sed 's/\\(.\\+\\)/@import \"\\1\";/' > index.scss",
 
     "debug:build:app" : "browserify src/main.js -t [ jstify --engine lodash-micro ] -d -o debug/main.js",
-    "debug:build:css" : "node-sass src/index.scss --output-style expanded -o debug/ --source-map debug/index.css.map --source-map-embed",
+    "debug:build:css" : "node-sass src/index.scss --output-style expanded --source-map debug/index.css.map --source-map-embed --stdout | autoprefixer > debug/index.css",
     "debug:build:idx" : "cp src/index.html debug/ && cp -R -p src/assets debug/assets",
     "debug:build"     : "npm run debug:build:css & npm run debug:build:app & npm run debug:build:idx",
 
