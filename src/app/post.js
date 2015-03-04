@@ -174,8 +174,6 @@ Post.stopRetrieve = function(collection) {
 Post.latest = function(collection) {
   var r = fbref.child(collection).orderByPriority().limitToFirst(10)
 
-    console.log(collection)
-
   r.once('value', function(snapshot) {
     var data = snapshot.val()
 

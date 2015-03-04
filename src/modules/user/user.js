@@ -10,17 +10,17 @@ var
 function UserMod(parent, node, options) {
   this.parent = parent
 
-  this.mods = {} // store PostShow and PostForm modules.
+  var u = this
 
-  this.action = options.action
-  this.uid = options.uid
-  this.firebasepath = 'user_' + this.action + '/' + this.uid
+  u.mods = {} // store PostShow and PostForm modules.
 
-  node.innerHTML = template(this)
+  u.action = options.action
+  u.uid = options.uid
+  u.firebasepath = 'user_' + u.action + '/' + u.uid
 
-  var r = $(node)
+  var r = $(node).html(template(u))
 
-  this.nodes = {
+  u.nodes = {
     root      : r,
     newpost   : $(node, '.app-new-post'),
     placehold : $(node, '.app-post-placeholder'),
@@ -28,61 +28,56 @@ function UserMod(parent, node, options) {
     prof      : $(node, '.profile')
   }
 
-  this.userDidLookup = function(uid, user) {
-    this.user = user
-    this.redrawProfile()
-    Post.retrieve(this.firebasepath)
-    this.parent.trigger('module:user:did:lookup', uid, user)
-  }.bind(this)
+  u.userDidLookup = function(uid, user) {
+    u.user = user
+    u.redrawProfile()
+    Post.retrieve(u.firebasepath)
+    u.parent.trigger('module:user:did:lookup', uid, user)
+  }
 
-  this.userFailedLookup = function (uid) {
-    this.parent.trigger('module:user:failed:lookup', uid)
-  }.bind(this)
+  u.userFailedLookup = function (uid) {
+    u.parent.trigger('module:user:failed:lookup', uid)
+  }
 
-  this.postsDidRetrieve = function(firebasepath, post){
-    var u = this, m = this.mods[post.key]
+  u.postsDidRetrieve = function(firebasepath, post){
+    var m = u.mods[post.key]
     if (m) { u.showmod(m) } else { u.addPost(post) }
-  }.bind(this)
+  }
 
-  this.postsDidUpdate = function(post){
-    var u = this, m = this.mods[post.key]
-    if (m) {
-      u.showmod(m)
-    }
-  }.bind(this)
+  u.postsDidUpdate = function(post){
+    var m = u.mods[post.key]
+    if (m) { u.showmod(m) }
+  }
 
   var actionMod = function(target) {
     var key = target.parent('.post-actions').data('post-key')
-    return this.mods[key]
-  }.bind(this)
+    return u.mods[key]
+  }
 
   r.on('click', '.fav', function(target) {
     var mod = actionMod(target)
     Post.toggleFav(mod.post, User.current.uid)
-  }.bind(this))
+  })
 
   r.on('click', '.edit', function(target) {
-    var mod = actionMod(target)
-    this.editPost(mod)
-  }.bind(this))
+    u.editPost(actionMod(target))
+  })
 
   r.on('click', '.remove', function(target) {
-    var mod = actionMod(target)
-    this.removePost(mod)
-  }.bind(this))
+    u.removePost(actionMod(target))
+  })
 
   r.on('click', '.undo', function(target) {
     var mod = actionMod(target)
     if (mod.post.stored) {
-      this.showmod(mod)
+      u.showmod(mod)
     } else {
-      this.hideNewPost()
+      u.hideNewPost()
     }
-  }.bind(this))
+  })
 
   r.on('click', '.save', function(target) {
     var mod = actionMod(target)
-
     mod.updatePost()
 
     if (!mod.isValid()) {
@@ -91,38 +86,40 @@ function UserMod(parent, node, options) {
       Post.update(mod.post)
     } else {
       Post.persist(mod.post)
-      this.hideNewPost()
+      u.hideNewPost()
     }
-  }.bind(this))
+  })
 
-  User.on('store:users:failed:lookup' , this.userFailedLookup)
-  User.on('store:users:did:lookup'    , this.userDidLookup)
-  Post.on('store:posts:did:retrieve'  , this.postsDidRetrieve)
-  Post.on('store:posts:did:update'    , this.postsDidUpdate)
-  Post.on('store:posts:did:togglefav' , this.postsDidUpdate)
+  User.on('store:users:failed:lookup' , u.userFailedLookup)
+  User.on('store:users:did:lookup'    , u.userDidLookup)
+  Post.on('store:posts:did:retrieve'  , u.postsDidRetrieve)
+  Post.on('store:posts:did:update'    , u.postsDidUpdate)
+  Post.on('store:posts:did:togglefav' , u.postsDidUpdate)
 
-  User.lookup(this.uid)
+  User.lookup(u.uid)
 }
 
 UserMod.prototype.unload = function() {
-  this.nodes.root.off().html('') // unregister all event handlers.
+  var u = this
 
-  User.off('store:users:failed:lookup' , this.userFailedLookup)
-  User.off('store:users:did:lookup'    , this.userDidLookup)
-  Post.off('store:posts:did:retrieve'  , this.postsDidRetrieve)
-  Post.off('store:posts:did:update'    , this.postsDidUpdate)
-  Post.off('store:posts:did:togglefav' , this.postsDidUpdate)
+  u.nodes.root.off().html('') // unregister all event handlers.
 
-  Post.stopRetrieve(this.firebasepath)
+  User.off('store:users:failed:lookup' , u.userFailedLookup)
+  User.off('store:users:did:lookup'    , u.userDidLookup)
+  Post.off('store:posts:did:retrieve'  , u.postsDidRetrieve)
+  Post.off('store:posts:did:update'    , u.postsDidUpdate)
+  Post.off('store:posts:did:togglefav' , u.postsDidUpdate)
+
+  Post.stopRetrieve(u.firebasepath)
 }
 
 UserMod.prototype.updatePlaceholder = function() {
   var modkeys = Object.keys(this.mods), p = this.nodes.placehold
 
-  if (modkeys.length == 0 || modkeys[0] == 'new') {
-    p.removeClass('app-hidden')
-  } else {
+  if (modkeys.length > 0 || this.mods['new']) {
     p.addClass('app-hidden')
+  } else {
+    p.removeClass('app-hidden')
   }
 }
 
@@ -131,57 +128,59 @@ UserMod.prototype.redrawProfile = function() {
 }
 
 UserMod.prototype.hideNewPost = function() {
-  var m = this.mods.new, n = this.nodes.newpost
+  var u = this, m = u.mods.new, n = u.nodes.newpost
   if (m) {
     m.unload()
     n.html('')
-    delete this.mods['new']
-    this.updatePlaceholder()
+    delete u.mods['new']
   }
+  u.updatePlaceholder()
 }
 
 UserMod.prototype.showNewPost = function() {
-  var m = this, el, p
-  if (!m.mods.new) {
+  var u = this, el, post
+  if (!u.mods.new) {
     el = document.createElement('div')
-    p = new Post({uid : m.uid, userName : m.user.displayName})
-    m.mods['new'] = new PostForm(m, el, {post : p})
-    m.nodes.newpost.append(el)
-    m.updatePlaceholder()
+    post = new Post({uid : u.uid, userName : u.user.displayName})
+    u.mods['new'] = new PostForm(u, el, {post : post})
+    u.nodes.newpost.append(el)
   }
+  u.updatePlaceholder()
 }
 
 UserMod.prototype.editPost = function(mod) {
-  var el = mod.nodes.root[0]
+  var u = this, el = mod.nodes.root[0]
   mod.unload()
-  this.mods[mod.post.key] = new PostForm(this, el, {post : mod.post})
+  u.mods[mod.post.key] = new PostForm(u, el, {post : mod.post})
 }
 
 UserMod.prototype.addPost = function(post) {
-  var m = this, el = document.createElement('div'),
-    p = new PostShow(m, el, {post : post})
-  m.mods[post.key] = p
-  m.nodes.posts.prepend(p.nodes.root[0])
-  m.updatePlaceholder()
+  var u = this, el = document.createElement('div'),
+    pmod = new PostShow(u, el, {post : post})
+  u.mods[post.key] = pmod
+  u.nodes.posts.prepend(pmod.nodes.root[0])
+  u.updatePlaceholder()
 }
 
 // Show a post that was previously being edited, or update it if the data changed.
 UserMod.prototype.showmod = function(mod) {
+  var u = this
   if (mod instanceof PostForm) {
     mod.unload()
-    var ps = new PostShow(this, mod.nodes.root[0], {post : mod.post})
-    this.mods[mod.post.key] = ps
+    var pmod = new PostShow(u, mod.nodes.root[0], {post : mod.post})
+    u.mods[mod.post.key] = pmod
   } else {
-    mod.updateFav() // update just fav flag for now.
+    mod.updateFav() // update just fav flag for now (could handle live udpates ITF)
   }
 }
 
 UserMod.prototype.removePost = function(mod) {
-  Post.destroy(mod.post)
+  var u = this
   mod.unload()
-  this.nodes.posts.remove(mod.nodes.root[0])
-  delete this.mods[mod.key]
-  this.updatePlaceholder()
+  Post.destroy(mod.post)
+  u.nodes.posts.remove(mod.nodes.root[0])
+  delete u.mods[mod.post.key]
+  u.updatePlaceholder()
 }
 
 module.exports = UserMod
