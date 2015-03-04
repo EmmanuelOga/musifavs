@@ -96,10 +96,12 @@ DomWrap.prototype.on = function(eventname, selector, callback) {
     }
   } else {
     fn = function(ev) {
-      ev.preventDefault()
       var n = new DomWrap(ev.target),
         r = n.matches(selector) ? n : n.parent(selector)
-      if (r) { callback(r, ev) }
+      if (r) {
+        ev.preventDefault()
+        callback(r, ev)
+      }
     }
   }
 
