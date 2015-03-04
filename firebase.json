@@ -1,6 +1,6 @@
 {
   "firebase": "musifavs",
-  "public": "release",
+  "public": "debug",
   "ignore": [
     "firebase.json",
     "**/.*",

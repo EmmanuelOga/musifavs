@@ -27,7 +27,8 @@
     "node-sass" : "^2.0.1",
     "http-rewrite-middleware" : "^0.1.6",
     "uglify-js" : "^2.4.16",
-    "autoprefixer" : "^5.1.0"
+    "autoprefixer" : "^5.1.0",
+    "firebase-tools" : "^1.1.5"
   },
 
   "scripts": {
@@ -39,12 +40,12 @@
     "debug:build"     : "npm run debug:build:css & npm run debug:build:app & npm run debug:build:idx",
 
     "debug:watch"     : "rewatch src/**/* -c 'npm run debug:build'",
-
     "debug:serve" : "live-server debug",
-
     "debug" : "npm run debug:watch & npm run debug:serve",
 
-    "release:app" : "browserify src/main.js -t [ jstify --engine lodash-micro ] -d | uglifyjs -c > release/main.js",
-    "release:css" : "node-sass src/index.scss --output-style compressed --source-map release/index.css.map --source-map-embed --stdout | autoprefixer > release/index.css"
+    "release:app" : "browserify src/main.js -t [ jstify --engine lodash-micro ] -d | uglifyjs > release/main.js",
+    "release:css" : "node-sass src/index.scss --output-style compressed --source-map release/index.css.map --source-map-embed --stdout | autoprefixer > release/index.css",
+    "release:idx" : "cp src/index.html release/ && cp -R -p src/assets release/assets",
+    "release" : "npm run release:app && npm run release:css && npm run release:idx"
   }
 }
