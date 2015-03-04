@@ -46,6 +46,8 @@
     "release:app" : "browserify src/main.js -t [ jstify --engine lodash-micro ] -d | uglifyjs > release/main.js",
     "release:css" : "node-sass src/index.scss --output-style compressed --source-map release/index.css.map --source-map-embed --stdout | autoprefixer > release/index.css",
     "release:idx" : "cp src/index.html release/ && cp -R -p src/assets release/assets",
-    "release" : "npm run release:app && npm run release:css && npm run release:idx"
+    "release" : "npm run release:app && npm run release:css && npm run release:idx",
+
+    "deploy" : "npm run debug:build && firebase deploy"
   }
 }
