@@ -17,6 +17,10 @@ function DomWrap(node, selector) {
   this.listeners = [] // save event listeners so we can unregister easily.
 }
 
+DomWrap.prototype.select = function(selector) {
+  return new DomWrap(this.node.querySelector(selector))
+}
+
 DomWrap.prototype.html = function(html) {
   this.node.innerHTML = html
   return this

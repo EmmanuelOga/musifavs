@@ -18,10 +18,10 @@ function PostForm(parent, node, options) {
 
   this.nodes = {
     root: r,
-    formMessage: $(node, '.post-edit-message'),
-    inputTitle: $(node, 'input[name=title]'),
-    inputUrl: $(node, 'input[name=url]'),
-    inputDesc: $(node, 'textarea')
+    formMessage : r.select('.post-edit-message'),
+    inputTitle  : $.select('input[name=title]'),
+    inputUrl    : $.select('input[name=url]'),
+    inputDesc   : $.select('textarea')
   }
 
   this.updateForm()

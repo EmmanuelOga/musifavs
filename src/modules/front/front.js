@@ -11,8 +11,8 @@ function Front(parent, node, options) {
 
   this.nodes = {
     root      : r,
-    posts     : $(node, '.latest-posts'),
-    favorited : $(node, '.latest-favs')
+    posts     : r.select('.latest-posts'),
+    favorited : r.select('.latest-favs')
   }
 
   f.handlePosts = function(collection, posts) {

@@ -5,12 +5,12 @@ var
 function Message(parent, node, options) {
   this.parent = parent
 
-  var m = this
+  var m = this, r = $(node).html(template(options))
 
   m.nodes = {
-    root : $(node).html(template(options)),
-    text : $(node, '.app-message-text'),
-    dism : $(node, '.app-message-dismiss')
+    root : r,
+    text : r.select('.app-message-text'),
+    dism : r.select('.app-message-dismiss')
   }
 
   m.mainDoMessageListener = function(text){

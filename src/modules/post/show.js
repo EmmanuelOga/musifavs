@@ -10,17 +10,18 @@ var _ = {
 function PostShow(parent, node, options) {
   this.parent = parent
 
-  var p = this.post = options.post
+  var p = this.post = options.post,
+    attr = _.merge(p.getattr(), {
+      postKey: p.key || 'new',
+      timeago: p.timeago(),
+      owned: p.uid == User.current.uid
+    })
 
-  node.innerHTML = template(_.merge(p.getattr(), {
-    postKey: p.key || 'new',
-    timeago: p.timeago(),
-    owned: p.uid == User.current.uid
-  }))
+  var r = $(node).addClass('app-post-show').html(template(attr))
 
   this.nodes = {
-    root: $(node).addClass('app-post-show'),
-    fav: $(node, '.fav')
+    root: r,
+    fav: r.select('.fav')
   }
 
   this.updateFav()

@@ -11,8 +11,8 @@ function Navigation(parent, node, options) {
 
   n.nodes = {
     root    : r,
-    logout  : $(node, '#nav-logout'),
-    newpost : $(node, '#nav-newpost')
+    logout  : r.select('#nav-logout'),
+    newpost : r.select('#nav-newpost')
   }
 
   n.updateLogout = function() {

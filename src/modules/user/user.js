@@ -22,10 +22,10 @@ function UserMod(parent, node, options) {
 
   u.nodes = {
     root      : r,
-    newpost   : $(node, '.app-new-post'),
-    placehold : $(node, '.app-post-placeholder'),
-    posts     : $(node, '.app-posts'),
-    prof      : $(node, '.profile')
+    newpost   : r.select('.app-new-post'),
+    placehold : r.select('.app-post-placeholder'),
+    posts     : r.select('.app-posts'),
+    prof      : r.select('.profile')
   }
 
   u.userDidLookup = function(uid, user) {
