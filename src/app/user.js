@@ -107,7 +107,8 @@ function updateAuth(authData) {
     p = authData.twitter.cachedUserProfile
 
     if (p) {
-      u.avatarUrl = p.profile_image_url_https
+      // apparently twitter doesn't serve the image to the 'wrong' referer :(
+      // u.avatarUrl = p.profile_image_url_https
       u.description = p.description
       u.location = p.location
       u.url = p.url
