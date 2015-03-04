@@ -1,0 +1,3 @@
+{
+  "asi" : true // do not enforce semicolons.
+}

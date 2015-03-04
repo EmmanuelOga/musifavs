@@ -91,7 +91,7 @@ Post.prototype.validation = function() {
     r.isValid = false
   }
 
-  if (!p.title || p.title.length == 0) {
+  if (!p.title || p.title.length === 0) {
     r.errors.title = 'title can\'t be blank'
     r.isValid = false
   }

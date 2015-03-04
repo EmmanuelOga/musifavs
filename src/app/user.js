@@ -94,7 +94,7 @@ require('riot').observable(User)
 function updateAuth(authData) {
   if (!authData) { return }
 
-  var u = User.current
+  var p, u = User.current
 
   u.uid = authData.uid
   u.authData = authData
@@ -104,7 +104,7 @@ function updateAuth(authData) {
   if (authData.provider == 'twitter') {
     u.displayName = authData.twitter.displayName
 
-    var p = authData.twitter.cachedUserProfile
+    p = authData.twitter.cachedUserProfile
 
     if (p) {
       u.avatarUrl = p.profile_image_url_https
@@ -115,7 +115,7 @@ function updateAuth(authData) {
   } else if (authData.provider == 'google') {
     u.displayName = authData.google.displayName
 
-    var p = authData.google.cachedUserProfile
+    p = authData.google.cachedUserProfile
 
     if (p) {
       u.avatarUrl = p.picture
